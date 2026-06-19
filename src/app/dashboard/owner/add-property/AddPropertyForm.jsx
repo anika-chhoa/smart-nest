@@ -163,12 +163,10 @@ export default function AddPropertyForm({ user }) {
       amenities: selectedAmenities,
       images: uploadedImages,
       status: "Pending",
-      ownerInfo: {
-        id: user?.id,
-        name: user?.name,
-        email: user?.email,
-        plan: user?.plan,
-      },
+      userId:user?.id,
+      userName:user?.name,
+      userEmail:user?.email,
+      userPlan:user?.plan,
     };
 
     try {
