@@ -1,38 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  Select, 
-  Label, 
-  Description, 
-  ListBox, 
-  TextArea,
-  Input, 
-  Checkbox,
-  Avatar, 
-  Button 
-} from "@heroui/react";
-import { 
-  FileText, 
-  DollarSign, 
-  Home, 
-  MapPin, 
-  Image as ImageIcon, 
-  Sparkles, 
-  CloudUpload,
-  Loader2,
-  CheckCircle,
-  ChevronDown
-} from "lucide-react";
-import toast from "react-hot-toast";
 import { createProperty } from "@/lib/actions/properties";
+import {
+  Button,
+  Checkbox,
+  Description,
+  Input,
+  Label,
+  ListBox,
+  Select,
+  TextArea,
+} from "@heroui/react";
+import {
+  CheckCircle,
+  ChevronDown,
+  CloudUpload,
+  DollarSign,
+  FileText,
+  Home,
+  Image as ImageIcon,
+  Loader2,
+  MapPin,
+  Sparkles,
+} from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function AddPropertyForm({ user }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
+  // 1. Added State for tracking specific field errors
+  const [errors, setErrors] = useState({});
 
   // Base Form Fields
   const [formData, setFormData] = useState({
@@ -51,49 +53,72 @@ export default function AddPropertyForm({ user }) {
   // Safe Array State for Amenities Multi-Selection
   const [selectedAmenities, setSelectedAmenities] = useState([]);
 
-  // Toggle Function ensuring perfect interaction when clicking anywhere on the amenity cards
   const toggleAmenity = (id) => {
     setSelectedAmenities((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
+  // 2. Clear field-specific error when user starts typing again
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
-  // Cloudinary Direct Unsigned REST Upload Pipeline
   const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     setUploadingImages(true);
-    const toastId = toast.loading("Uploading images to Cloudinary...");
+    // Clear image error if any when a new upload starts
+    if (errors.images) {
+      setErrors((prev) => ({ ...prev, images: "" }));
+    }
+
+    const formDataPayload = new FormData();
+    formDataPayload.append("file", file);
+    formDataPayload.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_PRESET,
+    );
 
     try {
-      const uploadPromises = files.map(async (file) => {
-        const data = new FormData();
-        data.append("file", file);
-        data.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_PRESET); 
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
-        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-        
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          { method: "POST", body: data }
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: formDataPayload,
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error?.message ||
+            `Upload failed with status: ${response.status}`,
         );
-        
-        if (!res.ok) throw new Error("Upload failed");
-        const fileData = await res.json();
-        return fileData.secure_url;
-      });
+      }
 
-      const urls = await uploadPromises;
-      setUploadedImages((prev) => [...prev, ...urls]);
-      toast.success("Images added successfully!", { id: toastId });
+      if (data.secure_url) {
+        setUploadedImages([data.secure_url]);
+        toast.success("Image uploaded successfully!");
+      } else {
+        throw new Error("Invalid response structure from Cloudinary");
+      }
     } catch (err) {
-      toast.error("Failed uploading images. Check Cloudinary settings.", { id: toastId });
+      console.error("Cloudinary upload failed:", err);
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Image upload failed. Try another format.",
+      );
     } finally {
       setUploadingImages(false);
     }
@@ -102,43 +127,61 @@ export default function AddPropertyForm({ user }) {
   // Form Submission Handler
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    
-    if (!formData.title || !formData.location || !formData.rentPrice || !formData.propertyType) {
-      toast.error("Please fill in all core metadata fields.");
-      return;
+
+    // 3. Specific field-by-field error validation
+    const newErrors = {};
+    if (!formData.title) newErrors.title = "Property title is required";
+    if (!formData.description)
+      newErrors.description = "Property description is required";
+    if (!formData.location)
+      newErrors.location = "Property location is required";
+    if (!formData.propertyType)
+      newErrors.propertyType = "Please select a property type";
+    if (!formData.rentPrice) newErrors.rentPrice = "Rent price is required";
+    if (!formData.bedrooms)
+      newErrors.bedrooms = "Number of bedrooms is required";
+    if (!formData.bathrooms)
+      newErrors.bathrooms = "Number of bathrooms is required";
+    if (!formData.size) newErrors.size = "Property size is required";
+
+    // Validate that an image array has been populated
+    if (uploadedImages.length === 0) {
+      newErrors.images = "Please upload a property asset image";
     }
 
-    if (uploadedImages.length === 0) {
-      toast.error("Please upload at least one property asset image.");
+    // If there are errors, set state and stop execution
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fill out all fields to publish your listing.");
       return;
     }
 
     setLoading(true);
 
-    // Form entries payload structure combining text inputs, cloud images, and chosen features array
     const fullPayload = {
       ...formData,
-      amenities: selectedAmenities, 
+      amenities: selectedAmenities,
       images: uploadedImages,
       status: "Pending",
       ownerInfo: {
         id: user?.id,
         name: user?.name,
         email: user?.email,
-        plan: user?.plan
-      }
+        plan: user?.plan,
+      },
     };
 
     try {
       const newPost = await createProperty(fullPayload);
-      console.log(newPost)
+      console.log(newPost);
 
-      if (!newPost || !newPost.acknowledged) throw new Error("Server storage process rejected execution.");
+      if (!newPost || !newPost.acknowledged)
+        throw new Error("Server storage process rejected execution.");
 
       toast.success("Masterpiece Listing Published!");
       router.push("/dashboard/owner/my-properties");
     } catch (error) {
-        console.log(error)
+      console.log(error);
       toast.error(error.message || "Failed to finalize listing entry.");
     } finally {
       setLoading(false);
@@ -153,24 +196,25 @@ export default function AddPropertyForm({ user }) {
           List Your Masterpiece
         </h1>
         <p className="text-muted text-sm max-w-2xl">
-          Curate an experience for your prospective tenants. Provide exquisite details to match the calibre of your property.
+          Curate an experience for your prospective tenants. Provide exquisite
+          details to match the calibre of your property.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        
         {/* LEFT COMPONENT COLUMN: Input Form Field Stack */}
         <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-8">
-          
           {/* Section 1: Basic Specifications Data Box */}
           <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-5">
             <div className="flex items-center gap-2 text-secondary font-semibold border-b border-border/10 pb-3">
               <FileText size={18} />
               <h3>Basic Information</h3>
             </div>
-            
+
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-semibold text-foreground">Property Title</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Property Title
+              </Label>
               <Input
                 name="title"
                 placeholder="e.g. Azure Cliffside Villa"
@@ -179,15 +223,20 @@ export default function AddPropertyForm({ user }) {
                 className="w-full px-4 py-3 bg-card border border-border/30 rounded-xl min-h-[48px] text-sm focus:outline-none focus:border-secondary"
                 value={formData.title}
                 onChange={handleInputChange}
+                aria-label="Property Title"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Property Type</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Property Type
+                </Label>
                 <Select
                   value={formData.propertyType}
-                  onSelectionChange={(key) => setFormData(p => ({ ...p, propertyType: key }))}
+                  onSelectionChange={(key) =>
+                    setFormData((p) => ({ ...p, propertyType: key }))
+                  }
                 >
                   <Select.Trigger className="w-full flex items-center justify-between px-4 py-3 bg-card border border-border/30 rounded-xl text-sm min-h-[48px] text-left">
                     <Select.Value placeholder="Select Type" />
@@ -195,10 +244,30 @@ export default function AddPropertyForm({ user }) {
                   </Select.Trigger>
                   <Select.Popover className="bg-surface border border-border/30 rounded-xl shadow-xl mt-1">
                     <ListBox className="p-1">
-                      <ListBox.Item key="Villa" className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer">Villa</ListBox.Item>
-                      <ListBox.Item key="Apartment" className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer">Apartment</ListBox.Item>
-                      <ListBox.Item key="Penthouse" className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer">Penthouse</ListBox.Item>
-                      <ListBox.Item key="Mansion" className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer">Mansion</ListBox.Item>
+                      <ListBox.Item
+                        key="Villa"
+                        className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
+                      >
+                        Villa
+                      </ListBox.Item>
+                      <ListBox.Item
+                        key="Apartment"
+                        className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
+                      >
+                        Apartment
+                      </ListBox.Item>
+                      <ListBox.Item
+                        key="Penthouse"
+                        className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
+                      >
+                        Penthouse
+                      </ListBox.Item>
+                      <ListBox.Item
+                        key="Mansion"
+                        className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
+                      >
+                        Mansion
+                      </ListBox.Item>
                     </ListBox>
                   </Select.Popover>
                 </Select>
@@ -206,12 +275,16 @@ export default function AddPropertyForm({ user }) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-semibold text-foreground">Description</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Description
+              </Label>
               <TextArea
                 aria-label="Property Description"
                 placeholder="Describe the architectural soul of the property..."
                 value={formData.description}
-                onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, description: e.target.value }))
+                }
                 className="w-full bg-card border border-border/30 rounded-xl p-4 min-h-[120px] focus:outline-none focus:border-secondary text-sm resize-none"
               />
             </div>
@@ -219,32 +292,38 @@ export default function AddPropertyForm({ user }) {
 
           {/* Section 2: Financial Matrix + Dimensional Properties */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             {/* Rent Configurations */}
             <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-4">
               <div className="flex items-center gap-2 text-secondary font-semibold border-b border-border/10 pb-2">
                 <DollarSign size={18} />
                 <h3>Pricing & Availability</h3>
               </div>
-              
+
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Rent Price ($)</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Rent Price ($)
+                </Label>
                 <Input
                   type="number"
                   name="rentPrice"
-                  placeholder="3,500"
+                  placeholder="2000"
                   required
                   variant="bordered bg-card border-border/30 rounded-xl min-h-[48px]"
                   value={formData.rentPrice}
                   onChange={handleInputChange}
+                  aria-label="2000"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Rent Type</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Rent Type
+                </Label>
                 <Select
                   value={formData.rentType}
-                  onSelectionChange={(key) => setFormData(p => ({ ...p, rentType: key }))}
+                  onSelectionChange={(key) =>
+                    setFormData((p) => ({ ...p, rentType: key }))
+                  }
                 >
                   <Select.Trigger className="w-full flex items-center justify-between px-4 py-3 bg-card border border-border/30 rounded-xl text-sm min-h-[48px] text-left">
                     <Select.Value placeholder="Monthly" />
@@ -252,9 +331,24 @@ export default function AddPropertyForm({ user }) {
                   </Select.Trigger>
                   <Select.Popover className="bg-surface border border-border/30 rounded-xl shadow-xl mt-1">
                     <ListBox className="p-1">
-                      <ListBox.Item key="Monthly" className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer">Monthly</ListBox.Item>
-                      <ListBox.Item key="Weekly" className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer">Weekly</ListBox.Item>
-                      <ListBox.Item key="Daily" className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer">Daily</ListBox.Item>
+                      <ListBox.Item
+                        key="Monthly"
+                        className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
+                      >
+                        Monthly
+                      </ListBox.Item>
+                      <ListBox.Item
+                        key="Weekly"
+                        className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
+                      >
+                        Weekly
+                      </ListBox.Item>
+                      <ListBox.Item
+                        key="Daily"
+                        className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
+                      >
+                        Daily
+                      </ListBox.Item>
                     </ListBox>
                   </Select.Popover>
                 </Select>
@@ -267,30 +361,35 @@ export default function AddPropertyForm({ user }) {
                 <Home size={18} />
                 <h3>Property Specs</h3>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-semibold text-foreground">Bedrooms</Label>
+                  <Label className="text-sm font-semibold text-foreground">
+                    Bedrooms
+                  </Label>
                   <Input
                     type="number"
                     name="bedrooms"
-                    placeholder="4"
+                    placeholder="2"
                     required
                     variant="bordered bg-card border-border/30 rounded-xl min-h-[48px]"
+                    aria-label="2"
                     value={formData.bedrooms}
                     onChange={handleInputChange}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-semibold text-foreground">Bathrooms</Label>
+                  <Label className="text-sm font-semibold text-foreground">
+                    Bathrooms
+                  </Label>
                   <Input
                     type="number"
                     step="0.5"
                     name="bathrooms"
-                    placeholder="2.5"
+                    placeholder="2"
                     required
                     variant="bordered bg-card border-border/30 rounded-xl min-h-[48px]"
-                    
+                    aria-label="2"
                     value={formData.bathrooms}
                     onChange={handleInputChange}
                   />
@@ -298,13 +397,16 @@ export default function AddPropertyForm({ user }) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Size (sqft)</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Size (sqft)
+                </Label>
                 <Input
                   type="number"
                   name="size"
-                  placeholder="4500"
+                  placeholder="2500"
                   required
                   variant="bordered bg-white border-border/30 rounded-xl min-h-[48px]"
+                  aria-label="2500"
                   value={formData.size}
                   onChange={handleInputChange}
                 />
@@ -319,13 +421,15 @@ export default function AddPropertyForm({ user }) {
               <h3>Location</h3>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-semibold text-foreground">Full Address</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Full Address
+              </Label>
               <Input
                 name="location"
                 placeholder="Start typing the address..."
                 required
                 variant="bordered bg-white border-border/30 rounded-xl min-h-[48px]"
-               
+                aria-label="Start typing the address..."
                 value={formData.location}
                 onChange={handleInputChange}
               />
@@ -338,28 +442,53 @@ export default function AddPropertyForm({ user }) {
               <ImageIcon size={18} />
               <h3>Media Gallery</h3>
             </div>
+
+            {/* The container has 'relative' so the input fills it completely */}
             <div className="border-2 border-dashed border-border/40 rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-card/40 transition hover:bg-card/70 relative">
+              {/* 1. The input is placed FIRST and given a high z-index to catch ALL clicks anywhere in the div */}
               <input
                 type="file"
-                multiple
                 accept="image/*"
                 onChange={handleImageUpload}
-                className="absolute inset-0 opacity-0 cursor-pointer disabled:pointer-events-none"
+                className="absolute inset-0 opacity-0 cursor-pointer disabled:pointer-events-none z-10"
                 disabled={uploadingImages}
+                aria-label="Upload property asset image"
               />
-              <CloudUpload size={40} className="text-muted mb-3" />
-              <p className="text-sm font-semibold text-foreground">Drag and drop high-res property images</p>
-              <p className="text-xs text-muted mt-1 mb-4">Recommended: 4:3 aspect ratio, minimum 1920x1080px</p>
-              <Button size="sm" variant="flat" className="bg-surface border border-border/30 font-medium">
-                {uploadingImages ? "Uploading..." : "Browse Files"}
-              </Button>
+
+              {/* 2. Added 'pointer-events-none' to this wrapper so clicks pass straight through to the input */}
+              <div className="flex flex-col items-center justify-center pointer-events-none">
+                <CloudUpload size={40} className="text-muted mb-3" />
+                <p className="text-sm font-semibold text-foreground">
+                  Drag and drop a high-res property image
+                </p>
+                <p className="text-xs text-muted mt-1 mb-4">
+                  Recommended: 4:3 aspect ratio, minimum 1920x1080px
+                </p>
+
+                
+                <Button
+                  size="sm"
+                  variant="flat"
+                  className="bg-surface border border-border/30 font-medium"
+                  tabIndex={-1} // Prevents double-focusing alongside the input for screen readers
+                >
+                  {uploadingImages ? "Uploading..." : "Browse File"}
+                </Button>
+              </div>
             </div>
 
             {uploadedImages.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2">
                 {uploadedImages.map((url, index) => (
-                  <div key={index} className="aspect-square relative rounded-xl overflow-hidden border border-border/30">
-                    <img src={url} alt="Uploaded Item Preview" className="object-cover w-full h-full" />
+                  <div
+                    key={index}
+                    className="aspect-square relative rounded-xl overflow-hidden border border-border/30"
+                  >
+                    <img
+                      src={url}
+                      alt="Uploaded Item Preview"
+                      className="object-cover w-full h-full"
+                    />
                   </div>
                 ))}
               </div>
@@ -374,76 +503,123 @@ export default function AddPropertyForm({ user }) {
             </div>
 
             <div className="flex flex-col gap-4">
-              <Label className="text-sm font-semibold text-foreground">Select one or more highlights for this property listing</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Select one or more highlights for this property listing
+              </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
                 {/* Amenity 1 */}
-                <div 
+                <div
                   onClick={() => toggleAmenity("smartHome")}
                   className={`p-4 border rounded-xl bg-card/30 transition-all cursor-pointer flex items-start gap-3 select-none ${
-                    selectedAmenities.includes("smartHome") ? "border-secondary bg-secondary/5" : "border-border/20"
+                    selectedAmenities.includes("smartHome")
+                      ? "border-secondary bg-secondary/5"
+                      : "border-border/20"
                   }`}
                 >
-                  <Checkbox isSelected={selectedAmenities.includes("smartHome")} aria-label="Smart Home Systems" />
+                  <Checkbox
+                    isSelected={selectedAmenities.includes("smartHome")}
+                    aria-label="Smart Home Systems"
+                  />
                   <div className="flex flex-col -mt-0.5">
-                    <span className="text-sm font-semibold text-foreground">Smart Home Systems</span>
-                    <Description className="text-xs text-muted mt-0.5">Integrated automated lighting, climate, and app control units.</Description>
+                    <span className="text-sm font-semibold text-foreground">
+                      Smart Home Systems
+                    </span>
+                    <Description className="text-xs text-muted mt-0.5">
+                      Integrated automated lighting, climate, and app control
+                      units.
+                    </Description>
                   </div>
                 </div>
 
                 {/* Amenity 2 */}
-                <div 
+                <div
                   onClick={() => toggleAmenity("infinityPool")}
                   className={`p-4 border rounded-xl bg-card/30 transition-all cursor-pointer flex items-start gap-3 select-none ${
-                    selectedAmenities.includes("infinityPool") ? "border-secondary bg-secondary/5" : "border-border/20"
+                    selectedAmenities.includes("infinityPool")
+                      ? "border-secondary bg-secondary/5"
+                      : "border-border/20"
                   }`}
                 >
-                  <Checkbox isSelected={selectedAmenities.includes("infinityPool")} aria-label="Private Infinity Pool" />
+                  <Checkbox
+                    isSelected={selectedAmenities.includes("infinityPool")}
+                    aria-label="Private Infinity Pool"
+                  />
                   <div className="flex flex-col -mt-0.5">
-                    <span className="text-sm font-semibold text-foreground">Private Infinity Pool</span>
-                    <Description className="text-xs text-muted mt-0.5">Glass-walled premium heated infinity pool with skyline orientation.</Description>
+                    <span className="text-sm font-semibold text-foreground">
+                      Private Infinity Pool
+                    </span>
+                    <Description className="text-xs text-muted mt-0.5">
+                      Glass-walled premium heated infinity pool with skyline
+                      orientation.
+                    </Description>
                   </div>
                 </div>
 
                 {/* Amenity 3 */}
-                <div 
+                <div
                   onClick={() => toggleAmenity("wineCellar")}
                   className={`p-4 border rounded-xl bg-card/30 transition-all cursor-pointer flex items-start gap-3 select-none ${
-                    selectedAmenities.includes("wineCellar") ? "border-secondary bg-secondary/5" : "border-border/20"
+                    selectedAmenities.includes("wineCellar")
+                      ? "border-secondary bg-secondary/5"
+                      : "border-border/20"
                   }`}
                 >
-                  <Checkbox isSelected={selectedAmenities.includes("wineCellar")} aria-label="Sommelier Wine Cellar" />
+                  <Checkbox
+                    isSelected={selectedAmenities.includes("wineCellar")}
+                    aria-label="Sommelier Wine Cellar"
+                  />
                   <div className="flex flex-col -mt-0.5">
-                    <span className="text-sm font-semibold text-foreground">Sommelier Wine Cellar</span>
-                    <Description className="text-xs text-muted mt-0.5">Climate and humidity display protection vault for fine vintages.</Description>
+                    <span className="text-sm font-semibold text-foreground">
+                      Sommelier Wine Cellar
+                    </span>
+                    <Description className="text-xs text-muted mt-0.5">
+                      Climate and humidity display protection vault for fine
+                      vintages.
+                    </Description>
                   </div>
                 </div>
 
                 {/* Amenity 4 */}
-                <div 
+                <div
                   onClick={() => toggleAmenity("concierge")}
                   className={`p-4 border rounded-xl bg-card/30 transition-all cursor-pointer flex items-start gap-3 select-none ${
-                    selectedAmenities.includes("concierge") ? "border-secondary bg-secondary/5" : "border-border/20"
+                    selectedAmenities.includes("concierge")
+                      ? "border-secondary bg-secondary/5"
+                      : "border-border/20"
                   }`}
                 >
-                  <Checkbox isSelected={selectedAmenities.includes("concierge")} aria-label="24/7 Elite Concierge" />
+                  <Checkbox
+                    isSelected={selectedAmenities.includes("concierge")}
+                    aria-label="24/7 Elite Concierge"
+                  />
                   <div className="flex flex-col -mt-0.5">
-                    <span className="text-sm font-semibold text-foreground">24/7 Elite Concierge</span>
-                    <Description className="text-xs text-muted mt-0.5">On-demand luxury hospitality, guest reception, and booking service.</Description>
+                    <span className="text-sm font-semibold text-foreground">
+                      24/7 Elite Concierge
+                    </span>
+                    <Description className="text-xs text-muted mt-0.5">
+                      On-demand luxury hospitality, guest reception, and booking
+                      service.
+                    </Description>
                   </div>
                 </div>
-
               </div>
             </div>
 
             {/* Custom Amenities Open Textarea Field */}
             <div className="flex flex-col gap-1.5 pt-2">
-              <Label className="text-sm font-semibold text-foreground">Custom Extra Features</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Custom Extra Features
+              </Label>
               <TextArea
                 aria-label="Custom Highlights"
                 placeholder="Any unique highlights not mentioned above (e.g., Helipad access, Private Spa)..."
                 value={formData.customAmenities}
-                onChange={(e) => setFormData(p => ({ ...p, customAmenities: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    customAmenities: e.target.value,
+                  }))
+                }
                 className="w-full bg-white border border-border/30 rounded-xl p-4 min-h-[90px] focus:outline-none focus:border-secondary text-sm resize-none"
               />
               <Description className="text-xs text-muted px-1">
@@ -459,20 +635,32 @@ export default function AddPropertyForm({ user }) {
               disabled={loading || uploadingImages}
               className="w-full bg-midnight-emerald text-white dark:bg-secondary dark:text-background py-6 rounded-full font-bold text-base shadow-md"
             >
-              {loading ? <Loader2 className="animate-spin" /> : "Publish Listing"}
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                "Publish Listing"
+              )}
             </Button>
           </div>
         </form>
 
         {/* RIGHT COLUMN COMPONENT: Sticky Preview Control Metadata Sidecard Panel */}
         <div className="space-y-6 lg:sticky lg:top-6">
-          
           {/* Owner Account Card Section */}
           <div className="bg-surface border border-border/20 rounded-3xl p-5 shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Avatar src={user?.image} name={user?.name} size="md" radius="lg" className="border border-border/30" />
+              <Image
+                src={user.image}
+                alt={user.name}
+                width={80}
+                height={80}
+                className="rounded-full border border-border/30"
+              />
+
               <div>
-                <h4 className="font-bold text-sm text-foreground">{user?.name || "Owner Profile"}</h4>
+                <h4 className="font-bold text-sm text-foreground">
+                  {user?.name || "Owner Profile"}
+                </h4>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-card text-muted rounded-md border border-border/20">
                     {user?.role || "Owner"}
@@ -481,23 +669,31 @@ export default function AddPropertyForm({ user }) {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-muted font-semibold uppercase tracking-wider">Email</p>
-              <p className="text-xs font-medium text-foreground/80 max-w-[120px] truncate">{user?.email}</p>
+              <p className="text-[10px] text-muted font-semibold uppercase tracking-wider">
+                Email
+              </p>
+              <p className="text-xs font-medium text-foreground/80 max-w-[120px] truncate">
+                {user?.email}
+              </p>
             </div>
           </div>
 
           {/* Review Progress Tracker Status Monitoring Card */}
           <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border/10 pb-3">
-              <span className="text-xs font-bold text-muted uppercase tracking-wider">Submission Status</span>
+              <span className="text-xs font-bold text-muted uppercase tracking-wider">
+                Submission Status
+              </span>
               <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full flex items-center gap-1">
                 ● Pending
               </span>
             </div>
             <p className="text-xs text-muted leading-relaxed">
-              Complete all required fields marked with an asterisk to enable listing publication. Your layout configuration forces a default verification review status.
+              Complete all required fields marked with an asterisk to enable
+              listing publication. Your layout configuration forces a default
+              verification review status.
             </p>
-            
+
             <div className="flex items-center justify-between pt-1 text-xs">
               <span className="text-muted font-medium">Current Plan:</span>
               <span className="font-bold text-secondary uppercase bg-secondary/10 px-2 py-0.5 rounded">
@@ -527,10 +723,10 @@ export default function AddPropertyForm({ user }) {
               )}
             </Button>
             <p className="text-[11px] text-muted text-center mt-3 max-w-[250px] mx-auto leading-normal">
-              By publishing, you agree to our Property Listing Terms and Luxury Quality Standards.
+              By publishing, you agree to our Property Listing Terms and Luxury
+              Quality Standards.
             </p>
           </div>
-
         </div>
       </div>
     </div>
