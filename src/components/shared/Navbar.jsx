@@ -25,16 +25,16 @@ const Navbar = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { data: session } = authClient.useSession();
   const user = session?.user;
-  const pathName=usePathname();
-  if(pathName.includes("dashboard")){
-    return null;
-  }
+  const pathName = usePathname();
 
   // Prevent hydration mismatch by waiting until mounted on the client
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  if (pathName.includes("dashboard")) {
+    return null;
+  }
   const handleSignOut = async () => {
     await authClient.signOut();
   };
