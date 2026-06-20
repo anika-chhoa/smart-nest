@@ -12,7 +12,6 @@ import {
   TextArea,
 } from "@heroui/react";
 import {
-  CheckCircle,
   ChevronDown,
   CloudUpload,
   DollarSign,
@@ -33,7 +32,6 @@ export default function AddPropertyForm({ user }) {
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
-  // 1. Added State for tracking specific field errors
   const [errors, setErrors] = useState({});
 
   // Base Form Fields
@@ -43,7 +41,7 @@ export default function AddPropertyForm({ user }) {
     location: "",
     propertyType: "",
     rentPrice: "",
-    rentType: "Monthly",
+    rentType: "Monthly", // fallback initial state matching default visual selector
     bedrooms: "",
     bathrooms: "",
     size: "",
@@ -59,7 +57,7 @@ export default function AddPropertyForm({ user }) {
     );
   };
 
-  // 2. Clear field-specific error when user starts typing again
+  // Uniform Change Handler for basic fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -69,15 +67,18 @@ export default function AddPropertyForm({ user }) {
     }
   };
 
+  const clearFieldError = (fieldName) => {
+    if (errors[fieldName]) {
+      setErrors((prev) => ({ ...prev, [fieldName]: "" }));
+    }
+  };
+
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadingImages(true);
-    // Clear image error if any when a new upload starts
-    if (errors.images) {
-      setErrors((prev) => ({ ...prev, images: "" }));
-    }
+    clearFieldError("images");
 
     const formDataPayload = new FormData();
     formDataPayload.append("file", file);
@@ -128,7 +129,6 @@ export default function AddPropertyForm({ user }) {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
-    // 3. Specific field-by-field error validation
     const newErrors = {};
     if (!formData.title) newErrors.title = "Property title is required";
     if (!formData.description)
@@ -144,12 +144,10 @@ export default function AddPropertyForm({ user }) {
       newErrors.bathrooms = "Number of bathrooms is required";
     if (!formData.size) newErrors.size = "Property size is required";
 
-    // Validate that an image array has been populated
     if (uploadedImages.length === 0) {
       newErrors.images = "Please upload a property asset image";
     }
 
-    // If there are errors, set state and stop execution
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       toast.error("Please fill out all fields to publish your listing.");
@@ -163,21 +161,20 @@ export default function AddPropertyForm({ user }) {
       amenities: selectedAmenities,
       images: uploadedImages,
       status: "Pending",
-      userId:user?.id,
-      userName:user?.name,
-      userEmail:user?.email,
-      userPlan:user?.plan,
+      userId: user?.id,
+      userName: user?.name,
+      userEmail: user?.email,
+      userPlan: user?.plan,
     };
 
     try {
       const newPost = await createProperty(fullPayload);
       console.log(newPost);
 
-      if (!newPost || !newPost.acknowledged)
-        throw new Error("Server storage process rejected execution.");
-
-      toast.success("Masterpiece Listing Published!");
-      router.push("/dashboard/owner/my-properties");
+      if (newPost?.insertedId) {
+        toast.success("Masterpiece Listing Published!");
+        router.push("/dashboard/owner/my-properties");
+      }
     } catch (error) {
       console.log(error);
       toast.error(error.message || "Failed to finalize listing entry.");
@@ -188,7 +185,6 @@ export default function AddPropertyForm({ user }) {
 
   return (
     <div className="font-body min-h-screen bg-background text-foreground py-12 px-4 md:px-8 max-w-7xl mx-auto">
-      {/* Structural Title Area */}
       <div className="mb-10">
         <h1 className="font-heading font-bold text-4xl text-foreground tracking-tight mb-2">
           List Your Masterpiece
@@ -200,9 +196,9 @@ export default function AddPropertyForm({ user }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* LEFT COMPONENT COLUMN: Input Form Field Stack */}
+        {/* LEFT COMPONENT COLUMN */}
         <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-8">
-          {/* Section 1: Basic Specifications Data Box */}
+          {/* Section 1: Basic Specifications */}
           <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-5">
             <div className="flex items-center gap-2 text-secondary font-semibold border-b border-border/10 pb-3">
               <FileText size={18} />
@@ -216,13 +212,17 @@ export default function AddPropertyForm({ user }) {
               <Input
                 name="title"
                 placeholder="e.g. Azure Cliffside Villa"
-                required
                 variant="bordered"
-                className="w-full px-4 py-3 bg-card border border-border/30 rounded-xl min-h-[48px] text-sm focus:outline-none focus:border-secondary"
+                className="w-full text-sm"
                 value={formData.title}
                 onChange={handleInputChange}
                 aria-label="Property Title"
               />
+              {errors.title && (
+                <span className="text-xs text-danger mt-0.5 px-1">
+                  {errors.title}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,37 +231,43 @@ export default function AddPropertyForm({ user }) {
                   Property Type
                 </Label>
                 <Select
-                  value={formData.propertyType}
-                  onSelectionChange={(key) =>
-                    setFormData((p) => ({ ...p, propertyType: key }))
-                  }
+                  name="propertyType"
+                  selectedKey={formData.propertyType}
+                  onSelectionChange={(key) => {
+                    setFormData((prev) => ({ ...prev, propertyType: key }));
+                    clearFieldError("propertyType");
+                  }}
                 >
                   <Select.Trigger className="w-full flex items-center justify-between px-4 py-3 bg-card border border-border/30 rounded-xl text-sm min-h-[48px] text-left">
-                    <Select.Value placeholder="Select Type" />
+                    <Select.Value />
                     <ChevronDown size={16} className="text-muted" />
                   </Select.Trigger>
                   <Select.Popover className="bg-surface border border-border/30 rounded-xl shadow-xl mt-1">
                     <ListBox className="p-1">
                       <ListBox.Item
-                        key="Villa"
+                        id="Villa"
+                        textValue="Villa"
                         className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
                       >
                         Villa
                       </ListBox.Item>
                       <ListBox.Item
-                        key="Apartment"
+                        id="Apartment"
+                        textValue="Apartment"
                         className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
                       >
                         Apartment
                       </ListBox.Item>
                       <ListBox.Item
-                        key="Penthouse"
+                        id="Penthouse"
+                        textValue="Penthouse"
                         className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
                       >
                         Penthouse
                       </ListBox.Item>
                       <ListBox.Item
-                        key="Mansion"
+                        id="Mansion"
+                        textValue="Mansion"
                         className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
                       >
                         Mansion
@@ -269,6 +275,11 @@ export default function AddPropertyForm({ user }) {
                     </ListBox>
                   </Select.Popover>
                 </Select>
+                {errors.propertyType && (
+                  <span className="text-xs text-danger mt-0.5 px-1">
+                    {errors.propertyType}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -280,17 +291,22 @@ export default function AddPropertyForm({ user }) {
                 aria-label="Property Description"
                 placeholder="Describe the architectural soul of the property..."
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, description: e.target.value }))
-                }
+                onChange={(e) => {
+                  setFormData((p) => ({ ...p, description: e.target.value }));
+                  clearFieldError("description");
+                }}
                 className="w-full bg-card border border-border/30 rounded-xl p-4 min-h-[120px] focus:outline-none focus:border-secondary text-sm resize-none"
               />
+              {errors.description && (
+                <span className="text-xs text-danger mt-0.5 px-1">
+                  {errors.description}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Section 2: Financial Matrix + Dimensional Properties */}
+          {/* Section 2: Financial Matrix + Dimensions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Rent Configurations */}
             <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-4">
               <div className="flex items-center gap-2 text-secondary font-semibold border-b border-border/10 pb-2">
                 <DollarSign size={18} />
@@ -305,12 +321,17 @@ export default function AddPropertyForm({ user }) {
                   type="number"
                   name="rentPrice"
                   placeholder="2000"
-                  required
-                  variant="bordered bg-card border-border/30 rounded-xl min-h-[48px]"
+                  variant="bordered"
+                  className="w-full bg-card border-border/30 rounded-xl min-h-[48px]"
                   value={formData.rentPrice}
                   onChange={handleInputChange}
                   aria-label="2000"
                 />
+                {errors.rentPrice && (
+                  <span className="text-xs text-danger mt-0.5 px-1">
+                    {errors.rentPrice}
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -318,31 +339,35 @@ export default function AddPropertyForm({ user }) {
                   Rent Type
                 </Label>
                 <Select
-                  value={formData.rentType}
+                  name="rentType"
+                  selectedKey={formData.rentType}
                   onSelectionChange={(key) =>
-                    setFormData((p) => ({ ...p, rentType: key }))
+                    setFormData((prev) => ({ ...prev, rentType: key }))
                   }
                 >
                   <Select.Trigger className="w-full flex items-center justify-between px-4 py-3 bg-card border border-border/30 rounded-xl text-sm min-h-[48px] text-left">
-                    <Select.Value placeholder="Monthly" />
+                    <Select.Value />
                     <ChevronDown size={16} className="text-muted" />
                   </Select.Trigger>
                   <Select.Popover className="bg-surface border border-border/30 rounded-xl shadow-xl mt-1">
                     <ListBox className="p-1">
                       <ListBox.Item
-                        key="Monthly"
+                        id="Monthly"
+                        textValue="Monthly"
                         className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
                       >
                         Monthly
                       </ListBox.Item>
                       <ListBox.Item
-                        key="Weekly"
+                        id="Weekly"
+                        textValue="Weekly"
                         className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
                       >
                         Weekly
                       </ListBox.Item>
                       <ListBox.Item
-                        key="Daily"
+                        id="Daily"
+                        textValue="Daily"
                         className="px-3 py-2 text-sm rounded-lg hover:bg-card cursor-pointer"
                       >
                         Daily
@@ -353,7 +378,6 @@ export default function AddPropertyForm({ user }) {
               </div>
             </div>
 
-            {/* Scale/Size Matrix Configurations */}
             <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-4">
               <div className="flex items-center gap-2 text-secondary font-semibold border-b border-border/10 pb-2">
                 <Home size={18} />
@@ -368,13 +392,18 @@ export default function AddPropertyForm({ user }) {
                   <Input
                     type="number"
                     name="bedrooms"
-                    placeholder="2"
-                    required
-                    variant="bordered bg-card border-border/30 rounded-xl min-h-[48px]"
-                    aria-label="2"
+                    placeholder="0"
+                    variant="bordered"
+                    className="w-full bg-card border-border/30 rounded-xl min-h-[48px]"
+                    aria-label="0"
                     value={formData.bedrooms}
                     onChange={handleInputChange}
                   />
+                  {errors.bedrooms && (
+                    <span className="text-xs text-danger mt-0.5 px-1">
+                      {errors.bedrooms}
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-sm font-semibold text-foreground">
@@ -382,15 +411,20 @@ export default function AddPropertyForm({ user }) {
                   </Label>
                   <Input
                     type="number"
-                    step="0.5"
+                    step="1"
                     name="bathrooms"
-                    placeholder="2"
-                    required
-                    variant="bordered bg-card border-border/30 rounded-xl min-h-[48px]"
-                    aria-label="2"
+                    placeholder="0"
+                    variant="bordered"
+                    className="w-full bg-card border-border/30 rounded-xl min-h-[48px]"
+                    aria-label="0"
                     value={formData.bathrooms}
                     onChange={handleInputChange}
                   />
+                  {errors.bathrooms && (
+                    <span className="text-xs text-danger mt-0.5 px-1">
+                      {errors.bathrooms}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -402,12 +436,17 @@ export default function AddPropertyForm({ user }) {
                   type="number"
                   name="size"
                   placeholder="2500"
-                  required
-                  variant="bordered bg-white border-border/30 rounded-xl min-h-[48px]"
+                  variant="bordered"
+                  className="w-full bg-white border-border/30 rounded-xl min-h-[48px]"
                   aria-label="2500"
                   value={formData.size}
                   onChange={handleInputChange}
                 />
+                {errors.size && (
+                  <span className="text-xs text-danger mt-0.5 px-1">
+                    {errors.size}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -425,25 +464,28 @@ export default function AddPropertyForm({ user }) {
               <Input
                 name="location"
                 placeholder="Start typing the address..."
-                required
-                variant="bordered bg-white border-border/30 rounded-xl min-h-[48px]"
+                variant="bordered"
+                className="w-full bg-white border-border/30 rounded-xl min-h-[48px]"
                 aria-label="Start typing the address..."
                 value={formData.location}
                 onChange={handleInputChange}
               />
+              {errors.location && (
+                <span className="text-xs text-danger mt-0.5 px-1">
+                  {errors.location}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Section 4: Cloudinary Media Gallery Upload Block */}
+          {/* Section 4: Cloudinary Media Gallery */}
           <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2 text-secondary font-semibold border-b border-border/10 pb-3">
               <ImageIcon size={18} />
               <h3>Media Gallery</h3>
             </div>
 
-            {/* The container has 'relative' so the input fills it completely */}
             <div className="border-2 border-dashed border-border/40 rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-card/40 transition hover:bg-card/70 relative">
-              {/* 1. The input is placed FIRST and given a high z-index to catch ALL clicks anywhere in the div */}
               <input
                 type="file"
                 accept="image/*"
@@ -453,7 +495,6 @@ export default function AddPropertyForm({ user }) {
                 aria-label="Upload property asset image"
               />
 
-              {/* 2. Added 'pointer-events-none' to this wrapper so clicks pass straight through to the input */}
               <div className="flex flex-col items-center justify-center pointer-events-none">
                 <CloudUpload size={40} className="text-muted mb-3" />
                 <p className="text-sm font-semibold text-foreground">
@@ -463,17 +504,21 @@ export default function AddPropertyForm({ user }) {
                   Recommended: 4:3 aspect ratio, minimum 1920x1080px
                 </p>
 
-                
                 <Button
                   size="sm"
                   variant="flat"
                   className="bg-surface border border-border/30 font-medium"
-                  tabIndex={-1} // Prevents double-focusing alongside the input for screen readers
+                  tabIndex={-1}
                 >
                   {uploadingImages ? "Uploading..." : "Browse File"}
                 </Button>
               </div>
             </div>
+            {errors.images && (
+              <span className="text-xs text-danger mt-0.5 block px-1">
+                {errors.images}
+              </span>
+            )}
 
             {uploadedImages.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2">
@@ -482,8 +527,10 @@ export default function AddPropertyForm({ user }) {
                     key={index}
                     className="aspect-square relative rounded-xl overflow-hidden border border-border/30"
                   >
-                    <img
+                    <Image
                       src={url}
+                      height={100}
+                      width={100}
                       alt="Uploaded Item Preview"
                       className="object-cover w-full h-full"
                     />
@@ -493,7 +540,7 @@ export default function AddPropertyForm({ user }) {
             )}
           </div>
 
-          {/* Section 5: Extras & Amenities Block (Interactive Multiple Choice Group Setup) */}
+          {/* Section 5: Extras & Amenities */}
           <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-5">
             <div className="flex items-center gap-2 text-secondary font-semibold border-b border-border/10 pb-3">
               <Sparkles size={18} />
@@ -552,7 +599,6 @@ export default function AddPropertyForm({ user }) {
                     </Description>
                   </div>
                 </div>
-
                 {/* Amenity 3 */}
                 <div
                   onClick={() => toggleAmenity("wineCellar")}
@@ -603,7 +649,6 @@ export default function AddPropertyForm({ user }) {
               </div>
             </div>
 
-            {/* Custom Amenities Open Textarea Field */}
             <div className="flex flex-col gap-1.5 pt-2">
               <Label className="text-sm font-semibold text-foreground">
                 Custom Extra Features
@@ -612,12 +657,12 @@ export default function AddPropertyForm({ user }) {
                 aria-label="Custom Highlights"
                 placeholder="Any unique highlights not mentioned above (e.g., Helipad access, Private Spa)..."
                 value={formData.customAmenities}
-                onChange={(e) =>
+                onChange={(e) => {
                   setFormData((p) => ({
                     ...p,
                     customAmenities: e.target.value,
-                  }))
-                }
+                  }));
+                }}
                 className="w-full bg-white border border-border/30 rounded-xl p-4 min-h-[90px] focus:outline-none focus:border-secondary text-sm resize-none"
               />
               <Description className="text-xs text-muted px-1">
@@ -626,7 +671,7 @@ export default function AddPropertyForm({ user }) {
             </div>
           </div>
 
-          {/* Small Screen Layout Submission Trigger Wrapper */}
+          {/* Small Screen Layout Submission Trigger */}
           <div className="lg:hidden">
             <Button
               type="submit"
@@ -642,19 +687,19 @@ export default function AddPropertyForm({ user }) {
           </div>
         </form>
 
-        {/* RIGHT COLUMN COMPONENT: Sticky Preview Control Metadata Sidecard Panel */}
+        {/* RIGHT COLUMN COMPONENT */}
         <div className="space-y-6 lg:sticky lg:top-6">
-          {/* Owner Account Card Section */}
           <div className="bg-surface border border-border/20 rounded-3xl p-5 shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Image
-                src={user.image}
-                alt={user.name}
-                width={80}
-                height={80}
-                className="rounded-full border border-border/30"
-              />
-
+              {user?.image && (
+                <Image
+                  src={user.image}
+                  alt={user.name || "User Avatar"}
+                  width={80}
+                  height={80}
+                  className="rounded-full border border-border/30"
+                />
+              )}
               <div>
                 <h4 className="font-bold text-sm text-foreground">
                   {user?.name || "Owner Profile"}
@@ -676,7 +721,6 @@ export default function AddPropertyForm({ user }) {
             </div>
           </div>
 
-          {/* Review Progress Tracker Status Monitoring Card */}
           <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border/10 pb-3">
               <span className="text-xs font-bold text-muted uppercase tracking-wider">
@@ -688,10 +732,8 @@ export default function AddPropertyForm({ user }) {
             </div>
             <p className="text-xs text-muted leading-relaxed">
               Complete all required fields marked with an asterisk to enable
-              listing publication. Your layout configuration forces a default
-              verification review status.
+              listing publication.
             </p>
-
             <div className="flex items-center justify-between pt-1 text-xs">
               <span className="text-muted font-medium">Current Plan:</span>
               <span className="font-bold text-secondary uppercase bg-secondary/10 px-2 py-0.5 rounded">
@@ -709,21 +751,11 @@ export default function AddPropertyForm({ user }) {
               className="w-full bg-midnight-emerald text-white dark:bg-secondary dark:text-background py-6 rounded-2xl font-bold text-base shadow-md hover:opacity-95 transition active:scale-[0.99] disabled:opacity-50"
             >
               {loading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="animate-spin" size={18} />
-                  <span>Publishing Masterpiece...</span>
-                </div>
+                <Loader2 className="animate-spin" />
               ) : (
-                <div className="flex items-center gap-2">
-                  <CheckCircle size={18} />
-                  <span>Publish Listing</span>
-                </div>
+                "Publish Listing"
               )}
             </Button>
-            <p className="text-[11px] text-muted text-center mt-3 max-w-[250px] mx-auto leading-normal">
-              By publishing, you agree to our Property Listing Terms and Luxury
-              Quality Standards.
-            </p>
           </div>
         </div>
       </div>

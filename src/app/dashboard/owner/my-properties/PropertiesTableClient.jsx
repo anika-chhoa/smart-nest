@@ -1,31 +1,107 @@
 "use client";
 
-import { deleteProperty } from "@/lib/actions/properties";
+import { deleteProperty, updateProperty } from "@/lib/actions/properties";
 import { TrashBin } from "@gravity-ui/icons";
-import { Table } from "@heroui/react";
-import { PenIcon } from "lucide-react";
+import {
+  Button,
+  Input,
+  Label,
+  Modal,
+  Surface,
+  Table,
+  TextField,
+} from "@heroui/react";
+import { Loader2, PenIcon } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+const PROPERTY_TYPES = ["Apartment", "House", "Villa", "Studio", "Commercial"];
+const RENT_TYPES = ["Monthly", "Weekly", "Daily"];
+
 export default function PropertiesTableClient({ initialProperties }) {
-  console.log(initialProperties);
   const router = useRouter();
   const [properties, setProperties] = useState(initialProperties);
 
-  // --- HANDLE EDIT ---
-  const handleEdit = (propertyId) => {
-    toast.loading("Opening editor...", { id: "edit-toast" });
+  // --- MODAL & FORM STATES ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-    // Redirects smoothly to your edit page route
-    router.push(`/dashboard/properties/edit/${propertyId}`);
+  const [formData, setFormData] = useState({
+    title: "",
+    location: "",
+    propertyType: "Apartment",
+    rentType: "Monthly",
+    rentPrice: "",
+    bedrooms: "",
+    bathrooms: "",
+  });
 
-    setTimeout(() => toast.dismiss("edit-toast"), 1000);
+  const sanitizeValue = (val, fallback) => {
+    if (!val || typeof val !== "string" || val.includes("react-aria")) {
+      return fallback;
+    }
+    return val;
   };
 
-  // --- HANDLE DELETE ---
+  const handleEditClick = (property) => {
+    setSelectedProperty(property);
+
+    setFormData({
+      title: property.title || "",
+      location: property.location || "",
+      propertyType: sanitizeValue(property.propertyType, "Apartment"),
+      rentType: sanitizeValue(property.rentType, "Monthly"),
+      bedrooms: property.bedrooms?.toString() || "0",
+      bathrooms: property.bathrooms?.toString() || "0",
+      rentPrice: property.rentPrice?.toString() || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    const toastId = toast.loading("Saving changes...");
+
+    const updatedPayload = {
+      title: formData.title.trim(),
+      location: formData.location.trim(),
+      propertyType: formData.propertyType,
+      rentType: formData.rentType,
+      bedrooms: Number(formData.bedrooms) || 0,
+      bathrooms: Number(formData.bathrooms) || 0,
+      rentPrice: Number(formData.rentPrice) || 0,
+    };
+
+    try {
+      const result = await updateProperty(selectedProperty._id, updatedPayload);
+
+      if (result && result.matchedCount > 0) {
+        setProperties((prev) =>
+          prev.map((item) =>
+            item._id === selectedProperty._id
+              ? { ...item, ...updatedPayload }
+              : item
+          )
+        );
+        toast.success("Listing updated successfully!", { id: toastId });
+        setIsModalOpen(false);
+        router.refresh();
+      } else {
+        throw new Error("No documents were modified");
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+      toast.error("Failed to save changes.", { id: toastId });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = (propertyId, propertyTitle) => {
-    // Trigger a custom notification block
     toast.custom(
       (t) => (
         <div
@@ -45,8 +121,6 @@ export default function PropertiesTableClient({ initialProperties }) {
               ? This action cannot be undone.
             </p>
           </div>
-
-          {/* Action Buttons inside the toast */}
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={() => toast.dismiss(t.id)}
@@ -56,8 +130,8 @@ export default function PropertiesTableClient({ initialProperties }) {
             </button>
             <button
               onClick={async () => {
-                toast.dismiss(t.id); // Close the confirmation toast
-                await executeDelete(propertyId, propertyTitle); // Execute the actual delete operation
+                toast.dismiss(t.id);
+                await executeDelete(propertyId, propertyTitle);
               }}
               className="px-3 py-1.5 font-body text-xs font-medium bg-danger text-white rounded-md hover:bg-danger/90 transition-colors cursor-pointer"
             >
@@ -66,37 +140,28 @@ export default function PropertiesTableClient({ initialProperties }) {
           </div>
         </div>
       ),
-      { duration: Infinity },
-    ); // Keeps toast visible until user interacts
+      { duration: Infinity }
+    );
   };
 
-  // --- SEPARATE FUNCTION TO EXECUTE THE API CALL ---
   const executeDelete = async (propertyId, propertyTitle) => {
-  const toastId = toast.loading("Deleting property...");
-
-  try {
-    const response = await deleteProperty(propertyId);
-    
-    // Check if the backend acknowledged the delete and actually removed a document
-    if (!response || response.deletedCount !== 1) {
-      throw new Error("Failed to delete");
+    const toastId = toast.loading("Deleting property...");
+    try {
+      const response = await deleteProperty(propertyId);
+      if (!response || response.deletedCount !== 1)
+        throw new Error("Failed to delete");
+      
+      setProperties((prev) => prev.filter((item) => item._id !== propertyId));
+      toast.success(`${propertyTitle} removed successfully!`, { id: toastId });
+      router.refresh();
+    } catch (error) {
+      console.error("Delete Error:", error);
+      toast.error(`Failed to remove ${propertyTitle}. Please try again.`, {
+        id: toastId,
+      });
     }
+  };
 
-    // Optimistically update local UI state immediately
-    setProperties((prev) => prev.filter((item) => item._id !== propertyId));
-    toast.success(`${propertyTitle} removed successfully!`, { id: toastId });
-    router.refresh();
-  } catch (error) {
-    console.error("Delete Error:", error);
-    // Fallback UI mock update
-    setProperties((prev) => prev.filter((item) => item._id !== propertyId));
-    toast.success(`${propertyTitle} removed (UI Local Fallback)`, {
-      id: toastId,
-    });
-  }
-};
-
-  // Helper to style status badges matching your theme
   const getStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
       case "approved":
@@ -110,12 +175,11 @@ export default function PropertiesTableClient({ initialProperties }) {
   };
 
   return (
-    <div className="bg-surface rounded-xl shadow-sm border border-border/40 overflow-hidden">
+    <div className="bg-surface rounded-3xl shadow-sm border border-border/40 overflow-hidden">
       <Table className="w-full text-left border-collapse">
         <Table.ScrollContainer>
           <Table.Content aria-label="Properties management table">
             <Table.Header className="bg-surface-container-low border-b border-border/60">
-              {/* keeps React Aria Accessibility engine happy with isRowHeader */}
               <Table.Column
                 isRowHeader
                 className="font-body text-xs font-semibold uppercase tracking-wider text-muted p-4"
@@ -157,14 +221,16 @@ export default function PropertiesTableClient({ initialProperties }) {
                   >
                     <Table.Cell className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-14 h-10 rounded-md overflow-hidden bg-card flex-shrink-0 border border-border/40">
-                          <img
+                        <div className="w-14 h-10 rounded-md overflow-hidden bg-card flex-shrink-0 border border-border/40 relative">
+                          <Image
                             src={
                               item.images?.[0] ||
                               "https://placehold.co/600x400?text=Property"
                             }
-                            alt={item.title}
-                            className="w-full h-full object-cover"
+                            alt={item.title || "Property"}
+                            fill
+                            sizes="56px"
+                            className="object-cover"
                           />
                         </div>
                         <div>
@@ -184,9 +250,7 @@ export default function PropertiesTableClient({ initialProperties }) {
 
                     <Table.Cell className="p-4">
                       <div className="font-body text-sm font-medium text-foreground">
-                        {item.propertyType === "react-aria-2"
-                          ? "Apartment"
-                          : item.propertyType || "Property"}
+                        {sanitizeValue(item.propertyType, "Apartment")}
                       </div>
                       <div className="font-body text-xs text-muted mt-0.5">
                         {item.bedrooms || 0} Bed, {item.bathrooms || 0} Bath
@@ -198,23 +262,30 @@ export default function PropertiesTableClient({ initialProperties }) {
                         ${Number(item.rentPrice).toLocaleString()}
                       </div>
                       <div className="font-body text-xs text-muted font-light">
-                        per month
+                        {
+                          {
+                            daily: "per day",
+                            weekly: "per week",
+                            monthly: "per month",
+                          }[sanitizeValue(item.rentType, "monthly").toLowerCase()] || "per month"
+                        }
                       </div>
                     </Table.Cell>
 
                     <Table.Cell className="p-4">
                       <span
-                        className={`inline-block px-2.5 py-1 text-xs font-semibold rounded-full tracking-wide uppercase ${getStatusStyles(item.status)}`}
+                        className={`inline-block px-2.5 py-1 text-xs font-semibold rounded-full tracking-wide uppercase ${getStatusStyles(
+                          item.status
+                        )}`}
                       >
                         {item.status || "Pending"}
                       </span>
                     </Table.Cell>
 
-                    {/* Actions Panel */}
                     <Table.Cell className="p-4 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <button
-                          onClick={() => handleEdit(item._id)}
+                          onClick={() => handleEditClick(item)}
                           title="Edit Property"
                           className="p-1.5 text-muted hover:text-secondary rounded-md hover:bg-surface-container-high transition-colors cursor-pointer"
                         >
@@ -236,10 +307,198 @@ export default function PropertiesTableClient({ initialProperties }) {
           </Table.Content>
         </Table.ScrollContainer>
         <Table.Footer className="p-4 bg-surface-container-lowest border-t border-border/40 text-xs font-body text-muted">
-          Showing {properties.length} of {properties.length} architectural
-          masterpieces
+          Showing {properties.length} of {properties.length} masterpieces
         </Table.Footer>
       </Table>
+
+      {/* --- HEROUI MODAL SYSTEM --- */}
+      <Modal isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
+        <Modal.Backdrop>
+          <Modal.Container placement="auto">
+            <Modal.Dialog className="sm:max-w-lg">
+              <Modal.CloseTrigger />
+              <Modal.Header>
+                <Modal.Heading>Edit Listing Specifications</Modal.Heading>
+                <p className="mt-1.5 text-sm leading-5 text-muted">
+                  Modify information values for your architecture listing below.
+                </p>
+              </Modal.Header>
+
+              <Modal.Body className="p-6">
+                <Surface variant="default">
+                  <form
+                    onSubmit={handleUpdateSubmit}
+                    className="flex flex-col gap-4"
+                  >
+                    <TextField
+                      className="w-full"
+                      name="title"
+                      variant="secondary"
+                    >
+                      <Label>Property Title</Label>
+                      <Input
+                        placeholder="e.g. Modern Apartment"
+                        value={formData.title}
+                        onChange={(e) =>
+                          setFormData({ ...formData, title: e.target.value })
+                        }
+                        required
+                      />
+                    </TextField>
+
+                    <TextField
+                      className="w-full"
+                      name="location"
+                      variant="secondary"
+                    >
+                      <Label>Location Address</Label>
+                      <Input
+                        placeholder="e.g. California, USA"
+                        value={formData.location}
+                        onChange={(e) =>
+                          setFormData({ ...formData, location: e.target.value })
+                        }
+                        required
+                      />
+                    </TextField>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-xs font-medium text-foreground">
+                          Property Type
+                        </Label>
+                        <select
+                          value={formData.propertyType}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              propertyType: e.target.value,
+                            })
+                          }
+                          className="h-10 w-full rounded-lg border border-border/60 bg-surface-container-low px-3 text-sm text-foreground shadow-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                          required
+                        >
+                          {PROPERTY_TYPES.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-xs font-medium text-foreground">
+                          Rent Cycle
+                        </Label>
+                        <select
+                          value={formData.rentType}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              rentType: e.target.value,
+                            })
+                          }
+                          className="h-10 w-full rounded-lg border border-border/60 bg-surface-container-low px-3 text-sm text-foreground shadow-sm outline-none focus:border-primary transition-colors cursor-pointer"
+                          required
+                        >
+                          {RENT_TYPES.map((rate) => (
+                            <option key={rate} value={rate}>
+                              {rate}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <TextField
+                        className="w-full"
+                        name="rentPrice"
+                        type="number"
+                        variant="secondary"
+                      >
+                        <Label>Rent Price ($)</Label>
+                        <Input
+                          placeholder="Rate Cost Value"
+                          value={formData.rentPrice}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              rentPrice: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </TextField>
+
+                      <span className="hidden sm:block" />
+
+                      <TextField
+                        className="w-full"
+                        name="bedrooms"
+                        type="number"
+                        variant="secondary"
+                      >
+                        <Label>Bedrooms Count</Label>
+                        <Input
+                          placeholder="0"
+                          value={formData.bedrooms}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              bedrooms: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </TextField>
+
+                      <TextField
+                        className="w-full"
+                        name="bathrooms"
+                        type="number"
+                        variant="secondary"
+                      >
+                        <Label>Bathrooms Count</Label>
+                        <Input
+                          placeholder="0"
+                          value={formData.bathrooms}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              bathrooms: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </TextField>
+                    </div>
+
+                    <Modal.Footer className="px-0 pb-0 pt-4">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setIsModalOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving}
+                        className="min-w-[100px]"
+                      >
+                        {saving ? (
+                          <Loader2 className="animate-spin" size={16} />
+                        ) : (
+                          "Save Changes"
+                        )}
+                      </Button>
+                    </Modal.Footer>
+                  </form>
+                </Surface>
+              </Modal.Body>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
     </div>
   );
 }
