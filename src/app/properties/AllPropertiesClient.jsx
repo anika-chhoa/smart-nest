@@ -11,6 +11,7 @@ import {
   Square,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AllPropertiesClient({ properties, activeFilters }) {
@@ -285,13 +286,14 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
 
               <div className="p-6 flex flex-col flex-grow justify-between space-y-4">
                 <div>
-                  <div className="flex items-center gap-1.5 text-muted text-xs font-body mb-2">
+                    <h3 className="font-heading text-xl text-primary font-semibold tracking-wide line-clamp-1 mb-2 group-hover:text-secondary transition-colors">
+                    {property.title}
+                  </h3>
+                  <div className="flex items-center gap-1.5 text-muted text-xs font-body">
                     <MapPin size={13} className="text-muted/80" />
                     <span>{property.location}</span>
                   </div>
-                  <h3 className="font-heading text-xl text-primary font-semibold tracking-wide line-clamp-1 group-hover:text-secondary transition-colors">
-                    {property.title}
-                  </h3>
+                  
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 py-3 border-y border-border/30 text-xs font-body text-muted">
@@ -322,9 +324,11 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
                     </span>
                   </div>
 
+                  <Link href={`/properties/${property._id}`}>
                   <button className="text-secondary hover:text-champagne font-body font-bold text-sm underline underline-offset-4 decoration-2 transition-colors duration-200 py-1 flex items-center gap-0.5 cursor-pointer">
                     View Details
                   </button>
+                  </Link>
                 </div>
               </div>
             </Card>
@@ -334,7 +338,7 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
 
       {/* FOOTER PAGINATION CONTROL */}
       {/* Replace total with a count derived from backend total metadata if available */}
-      <div className="flex justify-center pt-8">
+      {/* <div className="flex justify-center pt-8">
         <Pagination
           total={12}
           initialPage={1}
@@ -342,7 +346,7 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
           onChange={(page) => updateSearchParam("page", page.toString())}
           className="font-body font-medium"
         />
-      </div>
+      </div> */}
     </div>
   );
 }
