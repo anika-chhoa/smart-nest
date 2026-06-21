@@ -17,7 +17,6 @@ export default function PropertyReviews({
   const [reviews, setReviews] = useState(existingReviews);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -36,15 +35,14 @@ export default function PropertyReviews({
       tenantId: currentUser.id,
       tenantName: currentUser.name,
       tenantEmail: currentUser.email,
-      tenantImage:currentUser.image,
+      tenantImage: currentUser.image,
       rating,
       comment,
     };
     // console.log(review);
     try {
-    
-      const data = await postReviews(UpdatedReview)
-     
+      const data = await postReviews(UpdatedReview);
+
       if (!data.insertedId) throw new Error(data.error || "Submission failed");
 
       toast.success("Thank you! Your feedback has been published.");
