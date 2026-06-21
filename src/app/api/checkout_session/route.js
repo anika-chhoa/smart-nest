@@ -19,10 +19,13 @@ export async function POST(request) {
     const location=formData.get('location');
     const image=formData.get('image');
     const propertyId=formData.get('propertyId');
-    const userInfo=formData.get('userInfo');
+    const tenantFullName=formData.get('tenantFullName');
     const moveInDate=formData.get('moveInDate');
     const contactNumber=formData.get('contactNumber');
     const additionalNotes=formData.get('additionalNotes');
+    const ownerId=formData.get('ownerId');
+    const ownerName=formData.get('ownerName');
+    const ownerEmail=formData.get('ownerEmail');
 
 
     // Create Checkout Sessions from body params.
@@ -44,17 +47,21 @@ export async function POST(request) {
       ],
       metadata:{
         price:Number(price),
-        userId:user?.id,
-        userEmail:user?.email,
+        tenantId:user?.id,
+        tenantEmail:user?.email,
+        BookingStatus:"Pending",
         title,
         propertyId,
         image,
         location,
         rentType,
-        userInfo,
+        tenantFullName,
         moveInDate,
         contactNumber,
-        additionalNotes
+        additionalNotes,
+        ownerId,
+        ownerName,
+        ownerEmail
 
       },
       mode: 'payment',
