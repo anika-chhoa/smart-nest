@@ -14,7 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function AllPropertiesClient({ properties, activeFilters }) {
+export default function AllPropertiesClient({ properties = [], activeFilters = {} }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -52,46 +52,37 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
         </p>
       </div>
 
-      {/* SEARCH AND FILTERS BAR (Grid layout updated to 4 columns to fit everything perfectly) */}
-      <div className="bg-card/40 backdrop-blur-md p-6 rounded-2xl border border-border/40 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      {/* SEARCH AND FILTERS BAR (5 Columns layout matched to your reference image) */}
+      <div className="bg-card/40 backdrop-blur-md p-6 rounded-2xl border border-border/40 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+        
         {/* 1. Location Filter */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted font-body block">
-            Location
-          </label>
-          <div className="relative w-full">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted z-10">
-              <MapPin size={16} />
-            </span>
-            <Input
-              aria-label="Location Search"
-              className="w-full bg-background rounded-xl border border-border/60 pl-9 pr-3 py-2 text-sm focus:outline-none"
-              placeholder="Where would you like to live?"
-              defaultValue={activeFilters.location}
-              onBlur={(e) => updateSearchParam("location", e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter")
-                  updateSearchParam("location", e.target.value);
-              }}
-            />
-          </div>
+        <div className="relative w-full">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted z-10 pointer-events-none">
+            <MapPin size={16} />
+          </span>
+          <Input
+            aria-label="Location Search"
+            className="w-full bg-background rounded-xl text-sm font-body pl-8"
+            placeholder="Location"
+            defaultValue={activeFilters.location}
+            onBlur={(e) => updateSearchParam("location", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") updateSearchParam("location", e.target.value);
+            }}
+          />
         </div>
 
-        {/* 2. Property Type Select */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted font-body block">
-            Property Type
-          </label>
+        {/* 2. Property Type Dropdown */}
+        <div className="w-full">
           <Select
             aria-label="Filter by Property Type"
             onSelectionChange={(key) => updateSearchParam("propertyType", key)}
           >
-            <Select.Trigger className="w-full bg-background rounded-xl border border-border/60 px-3 py-2 text-sm flex items-center justify-between">
+            <Select.Trigger className="w-full bg-background rounded-xl border border-border/60 px-4 py-2.5 text-sm flex items-center justify-between text-muted font-body h-[40px]">
               <Select.Value
                 placeholder={
-                  activeFilters.propertyType === "All" ||
-                  !activeFilters.propertyType
-                    ? "All Types"
+                  activeFilters.propertyType === "All" || !activeFilters.propertyType
+                    ? "Property Type"
                     : activeFilters.propertyType
                 }
               />
@@ -102,99 +93,64 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
 
             <Select.Popover className="bg-background border border-border rounded-xl shadow-xl p-1 min-w-[200px]">
               <ListBox>
-                <ListBox.Item
-                  id="All"
-                  textValue="All Types"
-                  className="p-2 text-sm hover:bg-surface-container rounded-lg cursor-pointer"
-                >
-                  All Types
-                </ListBox.Item>
-                <ListBox.Item
-                  id="Villa"
-                  textValue="Villa"
-                  className="p-2 text-sm hover:bg-surface-container rounded-lg cursor-pointer"
-                >
-                  Villa
-                </ListBox.Item>
-                <ListBox.Item
-                  id="Penthouse"
-                  textValue="Penthouse"
-                  className="p-2 text-sm hover:bg-surface-container rounded-lg cursor-pointer"
-                >
-                  Penthouse
-                </ListBox.Item>
-                <ListBox.Item
-                  id="Apartment"
-                  textValue="Apartment"
-                  className="p-2 text-sm hover:bg-surface-container rounded-lg cursor-pointer"
-                >
-                  Apartment
-                </ListBox.Item>
-                {/* Mansion এখন সঠিকভাবে ListBox এর ভেতরে আছে */}
-                <ListBox.Item
-                  id="Mansion"
-                  textValue="Mansion"
-                  className="p-2 text-sm hover:bg-surface-container rounded-lg cursor-pointer"
-                >
-                  Mansion
-                </ListBox.Item>
-              </ListBox>{" "}
-              {/* একটি মাত্র সঠিক ক্লোজিং ট্যাগ */}
-            </Select.Popover>
-          </Select>
-        </div>
-
-        {/* 3. Sort by Price (Now in parallel with location and property type) */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted font-body block">
-            Sort by Price
-          </label>
-          <Select
-            aria-label="Sort properties by price"
-            onSelectionChange={(key) => updateSearchParam("sort", key)}
-          >
-            <Select.Trigger className="w-full bg-background rounded-xl border border-border/60 px-3 py-2 text-sm flex items-center justify-between">
-              <Select.Value
-                placeholder={
-                  activeFilters.sort === "high-to-low"
-                    ? "Price: High to Low"
-                    : "Price: Low to High"
-                }
-              />
-              <Select.Indicator>
-                <ChevronDown size={16} className="text-muted" />
-              </Select.Indicator>
-            </Select.Trigger>
-            <Select.Popover className="bg-background border border-border rounded-xl shadow-xl p-1 min-w-[200px]">
-              <ListBox>
-                <ListBox.Item
-                  id="low-to-high"
-                  textValue="Price: Low to High"
-                  className="p-2 text-sm hover:bg-surface-container rounded-lg cursor-pointer"
-                >
-                  Price: Low to High
-                </ListBox.Item>
-                <ListBox.Item
-                  id="high-to-low"
-                  textValue="Price: High to Low"
-                  className="p-2 text-sm hover:bg-surface-container rounded-lg cursor-pointer"
-                >
-                  Price: High to Low
-                </ListBox.Item>
+                {["All", "Villa", "Penthouse", "Apartment", "Mansion"].map((type) => (
+                  <ListBox.Item 
+                    key={type}
+                    id={type} 
+                    textValue={type} 
+                    className="p-2 text-sm text-foreground hover:bg-card rounded-lg cursor-pointer font-body"
+                  >
+                    {type === "All" ? "All Types" : type}
+                  </ListBox.Item>
+                ))}
               </ListBox>
             </Select.Popover>
           </Select>
         </div>
 
-        {/* 4. Search Call to Action Button */}
-        <button className="w-full bg-[#043927] hover:bg-[#03291c] text-white font-body font-medium transition-colors rounded-xl h-[40px] flex items-center justify-center gap-2 text-sm shadow-sm">
-          <Search size={16} />
-          <span>Search Estates</span>
-        </button>
+        {/* 3. Max Price Filter */}
+        <div className="relative w-full">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-sm font-body z-10 pointer-events-none">$</span>
+          <Input
+            aria-label="Maximum Budget Filter"
+            type="number"
+            className="w-full bg-background rounded-xl text-sm font-body pl-6"
+            placeholder="Max price"
+            defaultValue={activeFilters.maxPrice}
+            onBlur={(e) => updateSearchParam("maxPrice", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") updateSearchParam("maxPrice", e.target.value);
+            }}
+          />
+        </div>
+
+        {/* 4. Min Price Filter */}
+        <div className="relative w-full">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-sm font-body z-10 pointer-events-none">$</span>
+          <Input
+            aria-label="Minimum Budget Filter"
+            type="number"
+            className="w-full bg-background rounded-xl text-sm font-body pl-6"
+            placeholder="Min price"
+            defaultValue={activeFilters.minPrice}
+            onBlur={(e) => updateSearchParam("minPrice", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") updateSearchParam("minPrice", e.target.value);
+            }}
+          />
+        </div>
+
+        {/* 5. Search Action Button */}
+        <div className="w-full">
+          <button className="w-full bg-[#043927] hover:bg-[#03291c] text-white font-body font-medium transition-colors rounded-xl h-[40px] flex items-center justify-center gap-2 text-sm shadow-sm cursor-pointer">
+            <Search size={16} />
+            <span>Search</span>
+          </button>
+        </div>
       </div>
 
       {/* FILTER DETAILS AND SHOWING COUNTER */}
-      <div className="pt-4 border-t border-border/30">
+      <div className="pt-4 border-t border-border/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <h2 className="font-heading text-2xl text-primary font-medium">
             Featured Listings
@@ -207,6 +163,8 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
             properties
           </p>
         </div>
+
+        
       </div>
 
       {/* PROPERTIES CARDS GRID */}
@@ -280,8 +238,7 @@ export default function AllPropertiesClient({ properties, activeFilters }) {
                       ${Number(property.rentPrice || 0).toLocaleString()}
                     </span>
                     <span className="text-muted text-xs font-body">
-                      {" "}
-                      /{property.rentType === "Monthly" ? "mo" : "yr"}
+                      {" "}/{property.rentType === "Monthly" ? "mo" : "yr"}
                     </span>
                   </div>
 
