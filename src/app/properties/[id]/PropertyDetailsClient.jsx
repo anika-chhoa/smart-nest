@@ -1,7 +1,8 @@
 "use client";
 
-
 import PropertyReviews from "@/components/tenant/PropertyReviews";
+import { addToFavorite } from "@/lib/actions/AddToFavorite";
+import { getFavoriteButtonToggle } from "@/lib/api/AddToFavourite";
 import { useSession } from "@/lib/auth-client";
 import {
   Button,
@@ -72,9 +73,10 @@ const itemVariants = {
 };
 
 export default function PropertyDetailsClient({ property }) {
- const { data: session, status } = useSession();
-  const user=session?.user
-  console.log(user)
+  const { data: session, status } = useSession();
+  const user = session?.user;
+
+
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,8 +87,27 @@ export default function PropertyDetailsClient({ property }) {
   const [tenantFullName, setTenantFullName] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
 
-  const toggleFavoriteState = async () => {
-    try {
+  const handleFavorite = async () => {
+    const favoritePropertyInfo = {
+      tenantId: user.id,
+      tenantName: user.name,
+      tenantEmail: user.email,
+      propertyId: property._id,
+      propertyTitle: property.title,
+      propertyLocation: property.location,
+      propertyImage: property.images,
+      propertyRentPrice:property.rentPrice,
+      propertyRentType:property.rentType,
+      ownerEmail: property.userEmail,
+      ownerId: property.userId,
+      ownerName: property.userName,
+    };
+    // const isExist = await getFavoriteButtonToggle(user.id, property._id);
+    // if(isExist){
+    //   setIsFavorite(!isFavorite)
+    // }
+    const favoriteProperty = await addToFavorite(favoritePropertyInfo);
+    if (favoriteProperty.insertedId) {
       setIsFavorite(!isFavorite);
       toast.success(
         isFavorite
@@ -94,7 +115,9 @@ export default function PropertyDetailsClient({ property }) {
           : "Saved to your private dashboard favorites!",
         { icon: isFavorite ? "🗑️" : "❤️" },
       );
-    } catch (error) {
+    }
+
+    if (!favoriteProperty.insertedId) {
       toast.error("Failed to update selection collection profile.");
     }
   };
@@ -277,7 +300,7 @@ export default function PropertyDetailsClient({ property }) {
           </div>
 
           {/* reviews */}
-          <PropertyReviews propertyId={property._id} currentUser={user}/>
+          <PropertyReviews propertyId={property._id} currentUser={user} />
         </div>
 
         {/* RIGHT COLUMN: BOOKING CONTROLLER CONTAINER STICKY FRAME */}
@@ -326,7 +349,7 @@ export default function PropertyDetailsClient({ property }) {
                 {/* Add to Favorites Toggle Handler */}
                 <motion.button
                   whileTap={{ scale: 0.98 }}
-                  onClick={toggleFavoriteState}
+                  onClick={handleFavorite}
                   className={`w-full border font-body font-semibold transition-all duration-300 rounded-xl h-[44px] sm:h-[48px] flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer ${
                     isFavorite
                       ? "bg-red-50 border-red-200 text-red-600 shadow-inner"
