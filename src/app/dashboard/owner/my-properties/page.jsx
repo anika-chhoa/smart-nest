@@ -5,7 +5,8 @@ import PropertiesTableClient from "./PropertiesTableClient";
 
 const MyProperties = async () => {
   const user = await getUserSession();
-  const properties = (await getPropertiesByUserId(user?.id)) || [];
+  const propertiesData = await getPropertiesByUserId(user?.id);
+  const properties= propertiesData.data
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">

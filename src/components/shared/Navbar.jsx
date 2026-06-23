@@ -27,7 +27,6 @@ const Navbar = () => {
   const user = session?.user;
   const pathName = usePathname();
 
-  // Prevent hydration mismatch by waiting until mounted on the client
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -35,14 +34,19 @@ const Navbar = () => {
   if (pathName.includes("dashboard")) {
     return null;
   }
+
   const handleSignOut = async () => {
     await authClient.signOut();
   };
+
+  // Compute uniform dynamic dashboard path matching user roles
+  const dashboardPath = `/dashboard/${user?.role || "user"}`;
 
   return (
     <div className="font-body">
       <nav className="sticky top-0 z-40 w-full border-b border-border/20 bg-background/70 backdrop-blur-lg text-foreground transition-colors duration-200">
         <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+          
           {/* Left: Mobile Toggle & Brand Logo */}
           <div className="flex items-center gap-4">
             <button
@@ -63,12 +67,12 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Center: Desktop Navigation Links */}
-          <ul className="hidden items-center gap-6 md:flex">
+          {/* Center: Desktop Navigation Links (Increased text size for professional layout) */}
+          <ul className="hidden items-center gap-8 md:flex">
             <li>
               <Link
                 href="/"
-                className="text-sm font-medium hover:text-secondary transition-colors"
+                className="text-[15px] font-medium hover:text-secondary transition-colors"
               >
                 Home
               </Link>
@@ -76,14 +80,24 @@ const Navbar = () => {
             <li>
               <Link
                 href="/properties"
-                className="text-sm font-medium hover:text-secondary transition-colors"
+                className="text-[15px] font-medium hover:text-secondary transition-colors"
               >
                 All Properties
               </Link>
             </li>
+            {user && (
+              <li>
+                <Link
+                  href={dashboardPath}
+                  className="text-[15px] font-medium text-primary dark:text-secondary hover:opacity-80 transition-colors"
+                >
+                  Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
 
-          {/* Right: Theme Toggle & Authentication / Profile */}
+          {/* Right: Theme Toggle & Authentication / Profile Menu Container */}
           <div className="flex items-center gap-4">
             {/* Theme Toggle Button */}
             <button
@@ -100,36 +114,37 @@ const Navbar = () => {
               )}
             </button>
 
-            {/* Combined Auth Layout Wrapper (Visible across all screens now) */}
+            {/* Combined Auth Layout Wrapper */}
             <div className="flex items-center gap-4">
               {!user ? (
                 <>
                   <Link
                     href="/signin"
-                    className="hidden md:block text-sm font-medium hover:text-secondary transition-colors"
+                    className="hidden md:block text-[15px] font-medium hover:text-secondary transition-colors"
                   >
                     Login
                   </Link>
                   <Link href="/signup" className="hidden md:block">
-                    <button className="bg-midnight-emerald text-white dark:bg-secondary dark:text-background px-6 py-2.5 rounded-full font-label-md text-label-md hover:opacity-90 transition-all scale-100 active:scale-95 shadow-sm">
+                    <button className="bg-midnight-emerald text-white dark:bg-secondary dark:text-background px-6 py-2.5 rounded-full font-label-md text-label-md hover:opacity-90 transition-all scale-100 active:scale-95 shadow-sm cursor-pointer">
                       Get Started
                     </button>
                   </Link>
                 </>
               ) : (
-                <div className="relative flex items-center gap-3">
-                  {/* Avatar Trigger Button (Kept visible on mobile, clicking still works) */}
+                // Safe relative positioning context container for layout anchor alignment
+                <div className="relative flex items-center gap-3 h-16">
+                  {/* Avatar Trigger Button */}
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center rounded-full border border-border/40 focus:outline-none transition-transform active:scale-95"
+                    className="flex items-center rounded-full border border-border/40 focus:outline-none transition-transform active:scale-95 cursor-pointer"
                     aria-label="User menu"
                   >
                     {user?.image ? (
                       <Image
                         src={user.image}
                         alt={user.name || "User profile picture"}
-                        width={40}
-                        height={40}
+                        width={32}
+                        height={32}
                         className="h-8 w-8 rounded-full object-cover"
                         referrerPolicy="no-referrer"
                       />
@@ -140,16 +155,16 @@ const Navbar = () => {
                     )}
                   </button>
 
-                  {/* ⚡ Desktop Only Quick-Logout Icon Button (Hidden on Mobile) */}
+                  {/* Desktop Only Quick-Logout Button */}
                   <button
                     onClick={handleSignOut}
                     title="Log Out"
-                    className="hidden md:flex p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors"
+                    className="hidden md:flex p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
                   >
                     <LogOut size={18} />
                   </button>
 
-                  {/* Dropdown Menu */}
+                  {/* Professional Realigned Dropdown Menu Panel */}
                   {isDropdownOpen && (
                     <>
                       <div
@@ -157,7 +172,7 @@ const Navbar = () => {
                         onClick={() => setIsDropdownOpen(false)}
                       />
 
-                      <div className="absolute right-0 mt-12 w-56 origin-top-right rounded-xl border border-border/30 bg-surface p-2 shadow-xl z-40 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="absolute right-0 top-[85%] w-56 origin-top-right rounded-xl border border-border/30 bg-surface p-2 shadow-2xl z-40 animate-in fade-in slide-in-from-top-2 duration-150">
                         <div className="px-3 py-2 border-b border-border/20 mb-1">
                           <p className="text-xs text-muted font-medium">
                             Signed in as
@@ -168,7 +183,7 @@ const Navbar = () => {
                         </div>
 
                         <Link
-                          href={`/dashboard/${user?.role || "user"}`}
+                          href={dashboardPath}
                           onClick={() => setIsDropdownOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-card transition-colors w-full text-left"
                         >
@@ -181,7 +196,7 @@ const Navbar = () => {
                             handleSignOut();
                             setIsDropdownOpen(false);
                           }}
-                          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-danger hover:bg-danger/10 transition-colors w-full text-left font-medium mt-1"
+                          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-danger hover:bg-danger/10 transition-colors w-full text-left font-medium mt-1 cursor-pointer"
                         >
                           <LogOut size={16} />
                           <span>Logout</span>
@@ -203,7 +218,7 @@ const Navbar = () => {
                 <Link
                   href="/"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium hover:bg-card transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium hover:bg-card transition-colors text-[15px]"
                 >
                   <Home size={18} /> Home
                 </Link>
@@ -212,11 +227,22 @@ const Navbar = () => {
                 <Link
                   href="/properties"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium hover:bg-card transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium hover:bg-card transition-colors text-[15px]"
                 >
                   <Building2 size={18} /> All Properties
                 </Link>
               </li>
+              {user && (
+                <li>
+                  <Link
+                    href={dashboardPath}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium hover:bg-card transition-colors text-[15px] text-primary dark:text-secondary"
+                  >
+                    <LayoutDashboard size={18} /> Dashboard
+                  </Link>
+                </li>
+              )}
 
               <li className="my-2 border-t border-border/10" />
 
@@ -226,7 +252,7 @@ const Navbar = () => {
                     <Link
                       href="/signin"
                       onClick={() => setIsMenuOpen(false)}
-                      className="block text-center py-2.5 font-medium rounded-lg hover:bg-card transition-colors"
+                      className="block text-center py-2.5 font-medium rounded-lg hover:bg-card transition-colors text-[15px]"
                     >
                       Login
                     </Link>
@@ -242,21 +268,12 @@ const Navbar = () => {
               ) : (
                 <div className="flex flex-col gap-1">
                   <li>
-                    <Link
-                      href={`/dashboard/${user?.role || "user"}`}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-primary dark:text-secondary hover:bg-card transition-colors"
-                    >
-                      <LayoutDashboard size={18} /> Dashboard
-                    </Link>
-                  </li>
-                  <li>
                     <button
                       onClick={() => {
                         handleSignOut();
                         setIsMenuOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-danger hover:bg-danger/10 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-danger hover:bg-danger/10 transition-colors text-left text-[15px]"
                     >
                       <LogOut size={18} /> Logout
                     </button>
