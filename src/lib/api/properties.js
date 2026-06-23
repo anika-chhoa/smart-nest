@@ -3,21 +3,20 @@ import { serverFetch } from "../core/server"
 export const getAllProperties=async()=>{
     return serverFetch ("/api/properties")
 }
-// export const getFilteredProperties=async(search,sort,propertyType)=>{
-//     return serverFetch (`/api/properties?search=${search}&propertyType=${propertyType}&sort=${sort}`)
-// }
 
 
 
-export const getFilteredProperties = async ({ location, sort, propertyType, minPrice, maxPrice }) => {
+export const getFilteredProperties = async ({ location, propertyType, minPrice, maxPrice, page=1 }) => {
   const params = new URLSearchParams();
 
   if (location) params.append("search", location);
-  if (sort && sort !== "newest") params.append("sort", sort);
+  
   if (propertyType && propertyType !== "All") params.append("propertyType", propertyType);
 
   if (minPrice) params.append("minPrice", minPrice);
   if (maxPrice) params.append("maxPrice", maxPrice);
+
+  params.append("page", page);
 
   const queryString = params.toString();
   const path = queryString ? `/api/properties?${queryString}` : "/api/properties";

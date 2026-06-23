@@ -2,9 +2,9 @@
 
 import { Input, ListBox, Select } from "@heroui/react";
 import { ChevronDown, MapPin, Search } from "lucide-react";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export default function Banner() {
   const router = useRouter();
@@ -16,7 +16,6 @@ export default function Banner() {
     propertyType: searchParams.get("propertyType") || "All",
     minPrice: searchParams.get("minPrice") || "",
     maxPrice: searchParams.get("maxPrice") || "",
-    sort: searchParams.get("sort") || "low-to-high",
   });
 
   // Unified routing handler function
@@ -54,10 +53,35 @@ export default function Banner() {
     updateSearchParam("location", filters.location);
   };
 
+  // Framer Motion Variants for Staggered Children
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 1.8, ease: [0.16, 1, 0.3, 1] }, // Elegant custom cubic-bezier
+    },
+  };
+
   return (
     <section className="relative min-h-screen flex flex-col justify-center pt-24 pb-12 overflow-hidden">
-      {/* Background Underlay Graphics */}
-      <div className="absolute inset-0 z-0">
+      {/* Background Underlay Graphics with Initial Fade-In */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 1.1 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.7, ease: "easeOut" }}
+        className="absolute inset-0 z-0"
+      >
         <div
           className="w-full h-full bg-cover bg-center"
           style={{
@@ -66,10 +90,16 @@ export default function Banner() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/30 to-background/60" />
-      </div>
+      </motion.div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
-        <div className="max-w-3xl mb-12">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative z-10 max-w-7xl mx-auto px-6 w-full"
+      >
+        {/* Animated Typography Headers */}
+        <motion.div variants={itemVariants} className="max-w-3xl mb-12">
           <h1 className="font-heading text-5xl md:text-7xl text-foreground leading-[1.1] mb-6 text-balance tracking-tight">
             Discover Your Next{" "}
             <span className="italic font-normal text-champagne-accent text-[#FDB73E]">
@@ -81,37 +111,13 @@ export default function Banner() {
             Experience the world's most exclusive rentals, curated for those who
             seek the extraordinary in every detail.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Floating Metrics Badge Component */}
-        <div className="absolute top-1/4 right-2 hidden xl:block bg-glass backdrop-blur-md p-4 rounded-xl shadow-2xl border border-border/20 animate-bounce [animation-duration:3000ms]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-champagne-accent/30">
-              <Image
-                className="object-cover w-full h-full"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-SEQzwcb-quC7pqfiW_fVDKm0kGGapYdEAKECWHCpVrIdKHlLE5FyLsybRzQz1mZ_QAINzbudZZNiRimjdqBGbwLmL5z-6yBiN20fEySNPYW_Q2bLW5j2XW0y8CbQCFJED7E7nfMus9g77Gb7Qup2ymjDbn_07X4uYyxRwPqWPuuI8lh5JNTw1q_Q18KEkVYfKMsnX289g-zkoE5ZgHVrWFe_r_mh0ORknYR-dH9xcQmLcQDfa8L_tPNfOsphgD0U_TJ00AaPAaT5"
-                
-                alt="Feedback avatar"
-                height={100}
-                width={100}
-              />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <p className="text-xs font-semibold text-muted font-body">
-                  Just Booked
-                </p>
-              </div>
-              <p className="font-body text-sm font-medium text-champagne-accent">
-                Villa Serene, Ibiza
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Bar Input Container Grid (5 Columns matching AllPropertiesClient) */}
-        <div className="bg-card/40 backdrop-blur-md p-6 rounded-2xl border border-border/40 shadow-xl max-w-6xl w-full">
+        {/* Animated Search Bar Grid Container */}
+        <motion.div 
+          variants={itemVariants}
+          className="bg-card/40 backdrop-blur-md p-6 rounded-2xl border border-border/40 shadow-xl max-w-6xl w-full"
+        >
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
             
             {/* 1. Location Input Field */}
@@ -147,9 +153,6 @@ export default function Banner() {
                         : filters.propertyType
                     }
                   />
-                  <Select.Indicator>
-                    <ChevronDown size={16} className="text-muted" />
-                  </Select.Indicator>
                 </Select.Trigger>
 
                 <Select.Popover className="bg-background border border-border rounded-xl shadow-xl p-1 min-w-[200px]">
@@ -205,20 +208,22 @@ export default function Banner() {
               />
             </div>
 
-            {/* 5. Search Submission Button */}
+            {/* 5. Search Submission Button with Interactive Hover Scales */}
             <div className="w-full">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleSearchSubmit}
                 className="w-full bg-midnight-emerald hover:opacity-90 text-white font-body font-medium transition-opacity rounded-xl h-[40px] flex items-center justify-center gap-2 text-sm shadow-md cursor-pointer"
               >
                 <Search size={16} />
                 <span>Search Estates</span>
-              </button>
+              </motion.button>
             </div>
 
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }

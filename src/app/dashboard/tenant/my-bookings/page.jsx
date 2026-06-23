@@ -28,7 +28,7 @@ const MyBookings = async () => {
   // Payment status styles
   const getPaymentStatusStyles = (status) => {
     if (status === "Paid") {
-      return "text-midnight-emerald bg-emerald-500/10";
+      return "text-midnight-emerald dark:text-emerald-300 bg-emerald-500/10";
     }
 
     return "text-muted bg-surface-container";
