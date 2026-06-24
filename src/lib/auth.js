@@ -41,10 +41,6 @@ export const auth = betterAuth({
         default: "tenant",
         type: "string",
       },
-      plan: {
-        default: "tenant_free",
-        type: "string",
-      },
     },
   },
 });

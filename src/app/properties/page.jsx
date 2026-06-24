@@ -12,6 +12,7 @@ const AllPropertiesPage = async ({ searchParams }) => {
     propertyType: params.propertyType || "All",
     minPrice: params.minPrice || "",
     maxPrice: params.maxPrice || "",
+    sort: params.sort || "",
     page: params.page || "1",
   };
 

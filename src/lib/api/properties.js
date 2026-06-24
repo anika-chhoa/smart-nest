@@ -6,7 +6,7 @@ export const getAllProperties=async()=>{
 
 
 
-export const getFilteredProperties = async ({ location, propertyType, minPrice, maxPrice, page=1 }) => {
+export const getFilteredProperties = async ({ location, propertyType, minPrice, maxPrice,sort, page=1 }) => {
   const params = new URLSearchParams();
 
   if (location) params.append("search", location);
@@ -15,6 +15,8 @@ export const getFilteredProperties = async ({ location, propertyType, minPrice, 
 
   if (minPrice) params.append("minPrice", minPrice);
   if (maxPrice) params.append("maxPrice", maxPrice);
+
+  if (sort) params.append("sort", sort);
 
   params.append("page", page);
 
