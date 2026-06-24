@@ -23,6 +23,13 @@ export default async function Success({ searchParams }) {
 
   const { status, metadata, customer_details } = session;
   const customerEmail = customer_details?.email;
+  const paymentIntent =
+    typeof session.payment_intent === "string"
+      ? await stripe.paymentIntents.retrieve(session.payment_intent)
+      : session.payment_intent;
+
+  const transactionId = paymentIntent.id;
+  const chargeId = paymentIntent.latest_charge;
 
   if (status === "open") {
     return redirect("/");
@@ -30,8 +37,12 @@ export default async function Success({ searchParams }) {
 
   if (status === "complete") {
     // Process the internal DB action
-    await payment({ ...metadata, sessionId: session_id });
-   
+    await payment({
+      ...metadata,
+      sessionId: session_id,
+      transactionId,
+      chargeId,
+    });
 
     // Formatting the price from metadata safely
     const formattedPrice = metadata?.price

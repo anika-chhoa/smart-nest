@@ -1,11 +1,14 @@
+// src/app/dashboard/admin/transactions/page.jsx
+import { getAllBookings } from '@/lib/api/booking';
 import React from 'react';
+import AllTransactionsTableClient from './AllTransactionsTableClient';
 
-const TransactionsPage = () => {
-    return (
-        <div>
-            
-        </div>
-    );
-};
+export default async function TransactionsPage() {
+  const allBookings = await getAllBookings();
 
-export default TransactionsPage;
+  return (
+    <div className="p-4 max-w-7xl mx-auto space-y-6">
+      <AllTransactionsTableClient initialBookings={allBookings || []} />
+    </div>
+  );
+}
