@@ -1,19 +1,14 @@
-
 "use client";
 
-import { Card, Input, ListBox, Pagination, Select } from "@heroui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import PropertyCard from "@/components/shared/PropertyCard";
+import { Input, ListBox, Pagination, Select } from "@heroui/react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Bath,
-  BedDouble,
   ChevronDown,
   MapPin,
   RotateCcw,
   SlidersHorizontal,
-  Square,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -49,7 +44,7 @@ export default function AllPropertiesClient({
   const [propertyType, setPropertyType] = useState(
     activeFilters.propertyType && activeFilters.propertyType !== "All"
       ? activeFilters.propertyType
-      : ""
+      : "",
   );
   const [minPrice, setMinPrice] = useState(activeFilters.minPrice || "");
   const [maxPrice, setMaxPrice] = useState(activeFilters.maxPrice || "");
@@ -63,7 +58,8 @@ export default function AllPropertiesClient({
   const displayedCount = properties.length;
   const totalCount = propertiesData.totalData;
 
-  const hasActiveFilters = location || propertyType || minPrice || maxPrice || sort;
+  const hasActiveFilters =
+    location || propertyType || minPrice || maxPrice || sort;
 
   const updateSearchParam = (key, value) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -128,7 +124,8 @@ export default function AllPropertiesClient({
               onChange={(e) => setLocation(e.target.value)}
               onBlur={(e) => updateSearchParam("location", e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") updateSearchParam("location", e.target.value);
+                if (e.key === "Enter")
+                  updateSearchParam("location", e.target.value);
               }}
             />
           </div>
@@ -162,7 +159,7 @@ export default function AllPropertiesClient({
                       >
                         {type === "All" ? "All Types" : type}
                       </ListBox.Item>
-                    )
+                    ),
                   )}
                 </ListBox>
               </Select.Popover>
@@ -183,7 +180,8 @@ export default function AllPropertiesClient({
               onChange={(e) => setMinPrice(e.target.value)}
               onBlur={(e) => updateSearchParam("minPrice", e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") updateSearchParam("minPrice", e.target.value);
+                if (e.key === "Enter")
+                  updateSearchParam("minPrice", e.target.value);
               }}
             />
           </div>
@@ -202,7 +200,8 @@ export default function AllPropertiesClient({
               onChange={(e) => setMaxPrice(e.target.value)}
               onBlur={(e) => updateSearchParam("maxPrice", e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") updateSearchParam("maxPrice", e.target.value);
+                if (e.key === "Enter")
+                  updateSearchParam("maxPrice", e.target.value);
               }}
             />
           </div>
@@ -318,93 +317,19 @@ export default function AllPropertiesClient({
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {properties.map((property) => (
-                <motion.div key={property._id} variants={itemVariants} layout>
-                  <Card className="bg-surface-container-lowest border border-border/40 overflow-hidden hover:shadow-xl transition-all duration-300 rounded-2xl group flex flex-col h-full">
-                    <div className="relative aspect-[4/3] w-full bg-surface-container overflow-hidden">
-                      {property.images?.[0] ? (
-                        <motion.div
-                          className="w-full h-full"
-                          whileHover={{ scale: 1.04 }}
-                          transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-                        >
-                          <Image
-                            src={property.images[0]}
-                            alt={property.title}
-                            height={400}
-                            width={400}
-                            className="object-cover w-full h-full rounded-t-2xl"
-                            loading="lazy"
-                          />
-                        </motion.div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted/60 text-xs uppercase tracking-wider font-body">
-                          Image Coming Soon
-                        </div>
-                      )}
-                      {Number(property.rentPrice) > 15000 && (
-                        <span className="absolute top-4 left-4 bg-midnight-emerald/90 backdrop-blur-sm text-white font-body text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-sm z-10">
-                          Exclusive Listing
-                        </span>
-                      )}
-                      {property.propertyType && (
-                        <span className="absolute top-4 right-4 bg-secondary/90 backdrop-blur-sm text-white font-body text-[11px] font-medium px-2.5 py-1 rounded-full shadow-sm z-10">
-                          {property.propertyType}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-6 flex flex-col flex-grow justify-between space-y-4">
-                      <div>
-                        <h3 className="font-heading text-xl text-primary font-semibold tracking-wide line-clamp-1 mb-2 group-hover:text-secondary transition-colors">
-                          {property.title}
-                        </h3>
-                        <div className="flex items-center gap-1.5 text-muted text-xs font-body">
-                          <MapPin size={13} className="text-muted/80" />
-                          <span>{property.location}</span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2 py-3 border-y border-border/30 text-xs font-body text-muted">
-                        <div className="flex items-center gap-1.5">
-                          <BedDouble size={14} className="text-muted/70" />
-                          <span>{property.bedrooms} Beds</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 justify-center border-x border-border/30">
-                          <Bath size={14} className="text-muted/70" />
-                          <span>{property.bathrooms} Baths</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 justify-end">
-                          <Square size={13} className="text-muted/70" />
-                          <span>{Number(property.size || 0).toLocaleString()} Sqft</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-1">
-                        <div>
-                          <span className="font-heading text-lg font-bold text-primary">
-                            ${Number(property.rentPrice || 0).toLocaleString()}
-                          </span>
-                          <span className="text-muted text-xs font-body">
-                            /{property.rentType === "Monthly" ? "mo" : "yr"}
-                          </span>
-                        </div>
-                        <Link href={`/properties/${property._id}`}>
-                          <motion.button
-                            whileHover={{ x: 3 }}
-                            className="text-secondary hover:text-champagne font-body font-bold text-sm underline underline-offset-4 decoration-2 transition-colors duration-200 py-1 flex items-center gap-0.5 cursor-pointer"
-                          >
-                            View Details
-                          </motion.button>
-                        </Link>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+                <PropertyCard
+                  key={property._id}
+                  property={property}
+                  itemVariants={itemVariants}
+                />
               ))}
             </div>
 
             {totalPages > 1 && (
-              <motion.div variants={itemVariants} className="flex justify-center pt-10">
+              <motion.div
+                variants={itemVariants}
+                className="flex justify-center pt-10"
+              >
                 <Pagination className="flex flex-col sm:flex-row items-center gap-4 bg-card/20 p-4 rounded-xl border border-border/40">
                   <Pagination.Summary className="text-xs text-muted font-body">
                     Page {currentPage} of {totalPages}
@@ -413,7 +338,10 @@ export default function AllPropertiesClient({
                     <Pagination.Item>
                       <Pagination.Previous
                         disabled={currentPage === 1}
-                        onClick={() => currentPage > 1 && updateSearchParam("page", currentPage - 1)}
+                        onClick={() =>
+                          currentPage > 1 &&
+                          updateSearchParam("page", currentPage - 1)
+                        }
                         className={`flex items-center gap-1 text-sm font-body ${currentPage === 1 ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
                       >
                         <Pagination.PreviousIcon />
@@ -434,7 +362,10 @@ export default function AllPropertiesClient({
                     <Pagination.Item>
                       <Pagination.Next
                         disabled={currentPage === totalPages}
-                        onClick={() => currentPage < totalPages && updateSearchParam("page", currentPage + 1)}
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          updateSearchParam("page", currentPage + 1)
+                        }
                         className={`flex items-center gap-1 text-sm font-body ${currentPage === totalPages ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
                       >
                         <span>Next</span>

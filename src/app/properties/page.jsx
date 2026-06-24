@@ -6,17 +6,16 @@ const AllPropertiesPage = async ({ searchParams }) => {
  
   const params = await searchParams;
 
-  // Build the query object to pass to your backend API
   const queryFilters = {
     location: params.location || "",
     propertyType: params.propertyType || "All",
     minPrice: params.minPrice || "",
     maxPrice: params.maxPrice || "",
     sort: params.sort || "",
+    status: "approved" || "",
     page: params.page || "1",
   };
 
-  // Fetch filtered data directly from your backend route
   const allPropertiesData = await getFilteredProperties(queryFilters);
   
 
