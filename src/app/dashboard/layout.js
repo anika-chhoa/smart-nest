@@ -1,4 +1,4 @@
-// DashboardLayout.jsx
+
 import { DashboardSidebar } from "@/components/shared/DashboardSidebar";
 import { getUserSession } from "@/lib/core/session";
 

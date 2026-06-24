@@ -1,8 +1,8 @@
 import { serverFetch } from "../core/server"
 
-export const getAllProperties=async()=>{
-    return serverFetch ("/api/properties")
-}
+export const getAllProperties = async (page = 1, limit = 9) => {
+  return serverFetch(`/api/properties?page=${page}&limit=${limit}`);
+};
 
 
 
