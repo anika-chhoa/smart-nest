@@ -1,14 +1,14 @@
 "use server";
-import { protectedFetch } from "../core/server";
+import { serverFetch } from "../core/server";
 
-export const getAllBookings = async () => {
-  return protectedFetch("/api/bookings");
+export const getAllBookings = async (token) => {
+  return serverFetch("/api/bookings",token);
 };
 
-export const getBookingsByOwnerId = async (ownerId) => {
-  return protectedFetch(`/api/bookings?ownerId=${ownerId}`);
+export const getBookingsByOwnerId = async (ownerId, token) => {
+  return serverFetch(`/api/bookings?ownerId=${ownerId}`,token);
 };
 
-export const getBookingByTenantId = async (tenantId) => {
-  return protectedFetch(`/api/bookings?tenantId=${tenantId}`);
+export const getBookingByTenantId = async (tenantId, token) => {
+  return serverFetch(`/api/bookings?tenantId=${tenantId}`,token);
 };

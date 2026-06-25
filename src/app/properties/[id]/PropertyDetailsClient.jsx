@@ -1,3 +1,4 @@
+
 "use client";
 
 import PropertyReviews from "@/components/tenant/PropertyReviews";
@@ -37,7 +38,7 @@ import {
   Wine,
 } from "lucide-react";
 import Image from "next/image";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -71,12 +72,18 @@ const itemVariants = {
   },
 };
 
-export default function PropertyDetailsClient({ property }) {
+export default function PropertyDetailsClient({
+  property,
+  isFavorited = false,
+  initialFavoriteId = null,
+}) {
   const { data: session, status } = useSession();
   const user = session?.user;
 
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(isFavorited);
+  const [favoriteId, setFavoriteId] = useState(initialFavoriteId);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form Field Tracking States
@@ -85,7 +92,7 @@ export default function PropertyDetailsClient({ property }) {
   const [tenantFullName, setTenantFullName] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
 
-  const handleBooking=async()=>{
+  const handleBooking = async () => {
     if (!user) {
       router.push("/signin");
       return;
@@ -94,8 +101,8 @@ export default function PropertyDetailsClient({ property }) {
       router.push("/unauthorized");
       return;
     }
-    setIsModalOpen(true)
-  }
+    setIsModalOpen(true);
+  };
 
   const handleFavorite = async () => {
     if (!user) {
@@ -106,6 +113,10 @@ export default function PropertyDetailsClient({ property }) {
       router.push("/unauthorized");
       return;
     }
+
+    // Already saved — button should be disabled, this is just a safeguard
+    if (isFavorite) return;
+
     const favoritePropertyInfo = {
       tenantId: user.id,
       tenantName: user.name,
@@ -120,27 +131,22 @@ export default function PropertyDetailsClient({ property }) {
       ownerId: property.userId,
       ownerName: property.userName,
     };
-    // const isExist = await getFavoriteButtonToggle(user.id, property._id);
-    // if(isExist){
-    //   setIsFavorite(!isFavorite)
-    // }
-    const favoriteProperty = await addToFavorite(favoritePropertyInfo);
-    if (favoriteProperty.insertedId) {
-      setIsFavorite(!isFavorite);
-      toast.success(
-        isFavorite
-          ? "Removed from exclusive collection"
-          : "Saved to your private dashboard favorites!",
-        { icon: isFavorite ? "🗑️" : "❤️" },
-      );
-    }
 
-    if (!favoriteProperty.insertedId) {
+    const result = await addToFavorite(favoritePropertyInfo);
+
+    if (result?.insertedId) {
+      setIsFavorite(true);
+      toast.success("Saved to your private dashboard favorites!", {
+        icon: "❤️",
+      });
+    } else if (result?.msg === "Already Exists!") {
+      setIsFavorite(true); // ✅ force UI to red/disabled even if DB already had it
+      toast("Already saved to your collection!", { icon: "❤️" });
+    } else {
       toast.error("Failed to update selection collection profile.");
     }
   };
 
-  // Safe parsing loops covering combined string arrays and text splits
   const baseAmenities = property.amenities || [];
   const specializedAmenities = property.customAmenities
     ? property.customAmenities.split(",").map((item) => item.trim())
@@ -148,6 +154,10 @@ export default function PropertyDetailsClient({ property }) {
   const mergedAmenities = Array.from(
     new Set([...baseAmenities, ...specializedAmenities]),
   );
+  console.log("isFavorited:", isFavorited);
+  console.log("initialFavoriteId:", initialFavoriteId);
+  console.log("user.id:", user?.id);
+  console.log("property._id:", property?._id);
 
   return (
     <div className="w-full min-h-screen bg-background pb-16">
@@ -366,18 +376,19 @@ export default function PropertyDetailsClient({ property }) {
 
                 {/* Add to Favorites Toggle Handler */}
                 <motion.button
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: isFavorite ? 1 : 0.98 }}
                   onClick={handleFavorite}
-                  className={`w-full border font-body font-semibold transition-all duration-300 rounded-xl h-[44px] sm:h-[48px] flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer ${
+                  disabled={isFavorite}
+                  className={`w-full border font-body font-semibold transition-all duration-300 rounded-xl h-[44px] sm:h-[48px] flex items-center justify-center gap-2 text-xs sm:text-sm ${
                     isFavorite
-                      ? "bg-red-50 border-red-200 text-red-600 shadow-inner"
-                      : "bg-transparent border-border hover:bg-surface-container-low text-primary"
+                      ? "bg-red-50 border-red-200 text-red-600 shadow-inner cursor-not-allowed opacity-80"
+                      : "bg-transparent border-border hover:bg-surface-container-low text-primary cursor-pointer"
                   }`}
                 >
                   <Heart
                     size={16}
                     className={
-                      isFavorite ? "fill-current text-red-600" : "text-muted"
+                      isFavorite ? "fill-red-500 text-red-500" : "text-muted"
                     }
                   />
                   <span>

@@ -2,11 +2,17 @@ import { getBookingsByOwnerId } from '@/lib/api/booking';
 import { getUserSession } from '@/lib/core/session';
 import React from 'react';
 import BookingRequestTableClient from './BookingRequestTableClient';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 
 const BookingRequestOwner = async () => {
+    const response = await auth.api.getToken({
+        headers: await headers(),
+      });
+      const token = response?.token;
     const owner = await getUserSession();
-    const ownerBookingRequests = await getBookingsByOwnerId(owner.id);
+    const ownerBookingRequests = await getBookingsByOwnerId(owner.id,token);
     console.log(ownerBookingRequests)
     
     // Ensure fallback to empty array if data layer fails or returns null

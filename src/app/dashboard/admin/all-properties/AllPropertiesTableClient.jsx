@@ -79,10 +79,14 @@ export default function AllPropertiesTableClient({ initialProperties }) {
   const handleApprove = async (propertyId) => {
     const toastId = toast.loading("Approving listing...");
     try {
-      const result = await updateProperty(propertyId, {
-        status: "approved",
-        rejectionFeedback: null,
-      });
+      const result = await updateProperty(
+        propertyId,
+        {
+          status: "approved",
+          rejectionFeedback: null,
+        },
+        token,
+      );
 
       if (result && result.matchedCount > 0) {
         setProperties((prev) =>

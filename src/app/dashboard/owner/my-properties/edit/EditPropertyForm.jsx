@@ -1,14 +1,16 @@
 "use client";
 
-import { 
-  Button, 
-  Checkbox, 
-  Description, 
-  Input, 
-  Label, 
-  ListBox, 
-  Select, 
-  TextArea 
+import { updateProperty } from "@/lib/actions/properties";
+import { getPropertyByPropertyId } from "@/lib/api/properties";
+import {
+  Button,
+  Checkbox,
+  Description,
+  Input,
+  Label,
+  ListBox,
+  Select,
+  TextArea,
 } from "@heroui/react";
 import {
   CheckCircle,
@@ -23,12 +25,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-
-export default function EditPropertyForm({ user }) {
+export default function EditPropertyForm({ user, token }) {
   const router = useRouter();
   const { propertyId } = useParams(); // Grabs the variable directly from your folder routing path
 
@@ -59,11 +60,9 @@ export default function EditPropertyForm({ user }) {
   useEffect(() => {
     const fetchPropertyData = async () => {
       try {
-        const response = await fetch(`${baseURL}/api/properties/${propertyId}`);
-        if (!response.ok) throw new Error("Could not load listing database details.");
-        
-        const data = await response.json();
-        
+
+        const data = await getPropertyByPropertyId(propertyId, token);
+
         if (data) {
           setFormData({
             title: data.title || "",
@@ -117,17 +116,26 @@ export default function EditPropertyForm({ user }) {
 
     const formDataPayload = new FormData();
     formDataPayload.append("file", file);
-    formDataPayload.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_PRESET);
+    formDataPayload.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_PRESET,
+    );
 
     try {
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formDataPayload,
-      });
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: formDataPayload,
+        },
+      );
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message || "Upload structural anomaly encountered.");
+      if (!response.ok)
+        throw new Error(
+          data.error?.message || "Upload structural anomaly encountered.",
+        );
 
       if (data.secure_url) {
         setUploadedImages([data.secure_url]);
@@ -147,14 +155,20 @@ export default function EditPropertyForm({ user }) {
 
     const newErrors = {};
     if (!formData.title) newErrors.title = "Property title is required";
-    if (!formData.description) newErrors.description = "Property description is required";
-    if (!formData.location) newErrors.location = "Property location is required";
-    if (!formData.propertyType) newErrors.propertyType = "Please select a property type";
+    if (!formData.description)
+      newErrors.description = "Property description is required";
+    if (!formData.location)
+      newErrors.location = "Property location is required";
+    if (!formData.propertyType)
+      newErrors.propertyType = "Please select a property type";
     if (!formData.rentPrice) newErrors.rentPrice = "Rent price is required";
-    if (!formData.bedrooms) newErrors.bedrooms = "Number of bedrooms is required";
-    if (!formData.bathrooms) newErrors.bathrooms = "Number of bathrooms is required";
+    if (!formData.bedrooms)
+      newErrors.bedrooms = "Number of bedrooms is required";
+    if (!formData.bathrooms)
+      newErrors.bathrooms = "Number of bathrooms is required";
     if (!formData.size) newErrors.size = "Property size is required";
-    if (uploadedImages.length === 0) newErrors.images = "Please upload a property asset image";
+    if (uploadedImages.length === 0)
+      newErrors.images = "Please upload a property asset image";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -171,17 +185,8 @@ export default function EditPropertyForm({ user }) {
     };
 
     try {
-      // Points cleanly to your Express dynamic PUT route
-      const response = await fetch(`${baseURL}/api/properties/${propertyId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedPayload),
-      });
 
-      if (!response.ok) throw new Error("Server storage modification process rejected update.");
-      const result = await response.json();
+      const result = await updateProperty(propertyId, updatedPayload);
 
       if (result.modifiedCount === 0 && result.matchedCount === 0) {
         throw new Error("No database document layout changes adjusted.");
@@ -202,7 +207,9 @@ export default function EditPropertyForm({ user }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <Loader2 className="animate-spin text-primary" size={40} />
-        <p className="text-sm font-medium text-muted">Retrieving Architectural Spec Data...</p>
+        <p className="text-sm font-medium text-muted">
+          Retrieving Architectural Spec Data...
+        </p>
       </div>
     );
   }
@@ -215,7 +222,8 @@ export default function EditPropertyForm({ user }) {
           Edit Architectural Masterpiece
         </h1>
         <p className="text-muted text-sm max-w-2xl">
-          Modify and adjust the layout configurations and specifications of your active real estate asset.
+          Modify and adjust the layout configurations and specifications of your
+          active real estate asset.
         </p>
       </div>
 
@@ -230,7 +238,9 @@ export default function EditPropertyForm({ user }) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-semibold text-foreground">Property Title</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Property Title
+              </Label>
               <Input
                 name="title"
                 placeholder="e.g. Azure Cliffside Villa"
@@ -241,47 +251,71 @@ export default function EditPropertyForm({ user }) {
                 onChange={handleInputChange}
                 aria-label="Property Title"
               />
-              {errors.title && <span className="text-xs text-danger font-medium px-1">{errors.title}</span>}
+              {errors.title && (
+                <span className="text-xs text-danger font-medium px-1">
+                  {errors.title}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Property Type</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Property Type
+                </Label>
                 <Select
                   value={formData.propertyType}
-                  onSelectionChange={(key) => setFormData((p) => ({ ...p, propertyType: key }))}
+                  onSelectionChange={(key) =>
+                    setFormData((p) => ({ ...p, propertyType: key }))
+                  }
                 >
                   <Select.Trigger className="w-full flex items-center justify-between px-4 py-3 bg-card border border-border/30 rounded-xl text-sm min-h-[48px] text-left text-foreground">
-                    <Select.Value placeholder={formData.propertyType || "Select Type"} />
+                    <Select.Value
+                      placeholder={formData.propertyType || "Select Type"}
+                    />
                     <ChevronDown size={16} className="text-muted" />
                   </Select.Trigger>
                   <Select.Popover className="bg-surface border border-border/30 rounded-xl shadow-xl mt-1">
                     <ListBox className="p-1">
-                      {["Villa", "Apartment", "Penthouse", "Mansion"].map((type) => (
-                        <ListBox.Item
-                          key={type}
-                          className="px-3 py-2 text-sm text-foreground rounded-lg hover:bg-card cursor-pointer"
-                        >
-                          {type}
-                        </ListBox.Item>
-                      ))}
+                      {["Villa", "Apartment", "Penthouse", "Mansion"].map(
+                        (type) => (
+                          <ListBox.Item
+                            key={type}
+                            className="px-3 py-2 text-sm text-foreground rounded-lg hover:bg-card cursor-pointer"
+                          >
+                            {type}
+                          </ListBox.Item>
+                        ),
+                      )}
                     </ListBox>
                   </Select.Popover>
                 </Select>
-                {errors.propertyType && <span className="text-xs text-danger font-medium px-1">{errors.propertyType}</span>}
+                {errors.propertyType && (
+                  <span className="text-xs text-danger font-medium px-1">
+                    {errors.propertyType}
+                  </span>
+                )}
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-semibold text-foreground">Description</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Description
+              </Label>
               <TextArea
                 aria-label="Property Description"
                 placeholder="Describe the architectural soul of the property..."
                 value={formData.description}
-                onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, description: e.target.value }))
+                }
                 className="w-full bg-card border border-border/30 rounded-xl p-4 min-h-[120px] focus:outline-none focus:border-primary text-sm text-foreground resize-none"
               />
-              {errors.description && <span className="text-xs text-danger font-medium px-1">{errors.description}</span>}
+              {errors.description && (
+                <span className="text-xs text-danger font-medium px-1">
+                  {errors.description}
+                </span>
+              )}
             </div>
           </div>
 
@@ -294,7 +328,9 @@ export default function EditPropertyForm({ user }) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Rent Price ($)</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Rent Price ($)
+                </Label>
                 <Input
                   type="number"
                   name="rentPrice"
@@ -306,17 +342,27 @@ export default function EditPropertyForm({ user }) {
                   onChange={handleInputChange}
                   aria-label="Rent Price"
                 />
-                {errors.rentPrice && <span className="text-xs text-danger font-medium px-1">{errors.rentPrice}</span>}
+                {errors.rentPrice && (
+                  <span className="text-xs text-danger font-medium px-1">
+                    {errors.rentPrice}
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Rent Type</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Rent Type
+                </Label>
                 <Select
                   value={formData.rentType}
-                  onSelectionChange={(key) => setFormData((p) => ({ ...p, rentType: key }))}
+                  onSelectionChange={(key) =>
+                    setFormData((p) => ({ ...p, rentType: key }))
+                  }
                 >
                   <Select.Trigger className="w-full flex items-center justify-between px-4 py-3 bg-card border border-border/30 rounded-xl text-sm min-h-[48px] text-left text-foreground">
-                    <Select.Value placeholder={formData.rentType || "Monthly"} />
+                    <Select.Value
+                      placeholder={formData.rentType || "Monthly"}
+                    />
                     <ChevronDown size={16} className="text-muted" />
                   </Select.Trigger>
                   <Select.Popover className="bg-surface border border-border/30 rounded-xl shadow-xl mt-1">
@@ -343,7 +389,9 @@ export default function EditPropertyForm({ user }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-semibold text-foreground">Bedrooms</Label>
+                  <Label className="text-sm font-semibold text-foreground">
+                    Bedrooms
+                  </Label>
                   <Input
                     type="number"
                     name="bedrooms"
@@ -355,7 +403,9 @@ export default function EditPropertyForm({ user }) {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-semibold text-foreground">Bathrooms</Label>
+                  <Label className="text-sm font-semibold text-foreground">
+                    Bathrooms
+                  </Label>
                   <Input
                     type="number"
                     step="0.5"
@@ -370,7 +420,9 @@ export default function EditPropertyForm({ user }) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-semibold text-foreground">Size (sqft)</Label>
+                <Label className="text-sm font-semibold text-foreground">
+                  Size (sqft)
+                </Label>
                 <Input
                   type="number"
                   name="size"
@@ -391,7 +443,9 @@ export default function EditPropertyForm({ user }) {
               <h3>Location</h3>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-semibold text-foreground">Full Address</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Full Address
+              </Label>
               <Input
                 name="location"
                 placeholder="Start typing the address..."
@@ -400,7 +454,11 @@ export default function EditPropertyForm({ user }) {
                 value={formData.location}
                 onChange={handleInputChange}
               />
-              {errors.location && <span className="text-xs text-danger font-medium px-1">{errors.location}</span>}
+              {errors.location && (
+                <span className="text-xs text-danger font-medium px-1">
+                  {errors.location}
+                </span>
+              )}
             </div>
           </div>
 
@@ -421,9 +479,18 @@ export default function EditPropertyForm({ user }) {
               />
               <div className="flex flex-col items-center justify-center pointer-events-none">
                 <CloudUpload size={40} className="text-muted mb-3" />
-                <p className="text-sm font-semibold text-foreground">Upload new replacement listing image asset</p>
-                <p className="text-xs text-muted mt-1 mb-4">Recommended: 4:3 aspect ratio</p>
-                <Button size="sm" variant="flat" className="bg-surface border border-border/30 font-medium text-foreground" tabIndex={-1}>
+                <p className="text-sm font-semibold text-foreground">
+                  Upload new replacement listing image asset
+                </p>
+                <p className="text-xs text-muted mt-1 mb-4">
+                  Recommended: 4:3 aspect ratio
+                </p>
+                <Button
+                  size="sm"
+                  variant="flat"
+                  className="bg-surface border border-border/30 font-medium text-foreground"
+                  tabIndex={-1}
+                >
                   {uploadingImages ? "Uploading..." : "Browse File"}
                 </Button>
               </div>
@@ -432,8 +499,17 @@ export default function EditPropertyForm({ user }) {
             {uploadedImages.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2">
                 {uploadedImages.map((url, index) => (
-                  <div key={index} className="aspect-square relative rounded-xl overflow-hidden border border-border/30">
-                    <Image src={url} height={100} width={100} alt="Asset Preview" className="object-cover w-full h-full" />
+                  <div
+                    key={index}
+                    className="aspect-square relative rounded-xl overflow-hidden border border-border/30"
+                  >
+                    <Image
+                      src={url}
+                      height={100}
+                      width={100}
+                      alt="Asset Preview"
+                      className="object-cover w-full h-full"
+                    />
                   </div>
                 ))}
               </div>
@@ -450,22 +526,47 @@ export default function EditPropertyForm({ user }) {
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { id: "smartHome", label: "Smart Home Systems", desc: "Integrated automated lighting, climate, and app control units." },
-                  { id: "infinityPool", label: "Private Infinity Pool", desc: "Glass-walled premium heated infinity pool with skyline orientation." },
-                  { id: "wineCellar", label: "Sommelier Wine Cellar", desc: "Climate and humidity display protection vault for fine vintages." },
-                  { id: "concierge", label: "24/7 Elite Concierge", desc: "On-demand luxury hospitality, guest reception, and booking service." }
+                  {
+                    id: "smartHome",
+                    label: "Smart Home Systems",
+                    desc: "Integrated automated lighting, climate, and app control units.",
+                  },
+                  {
+                    id: "infinityPool",
+                    label: "Private Infinity Pool",
+                    desc: "Glass-walled premium heated infinity pool with skyline orientation.",
+                  },
+                  {
+                    id: "wineCellar",
+                    label: "Sommelier Wine Cellar",
+                    desc: "Climate and humidity display protection vault for fine vintages.",
+                  },
+                  {
+                    id: "concierge",
+                    label: "24/7 Elite Concierge",
+                    desc: "On-demand luxury hospitality, guest reception, and booking service.",
+                  },
                 ].map((amenity) => (
                   <div
                     key={amenity.id}
                     onClick={() => toggleAmenity(amenity.id)}
                     className={`p-4 border rounded-xl bg-card/30 transition-all cursor-pointer flex items-start gap-3 select-none ${
-                      selectedAmenities.includes(amenity.id) ? "border-primary bg-primary/5" : "border-border/20"
+                      selectedAmenities.includes(amenity.id)
+                        ? "border-primary bg-primary/5"
+                        : "border-border/20"
                     }`}
                   >
-                    <Checkbox isSelected={selectedAmenities.includes(amenity.id)} aria-label={amenity.label} />
+                    <Checkbox
+                      isSelected={selectedAmenities.includes(amenity.id)}
+                      aria-label={amenity.label}
+                    />
                     <div className="flex flex-col -mt-0.5">
-                      <span className="text-sm font-semibold text-foreground">{amenity.label}</span>
-                      <Description className="text-xs text-muted mt-0.5">{amenity.desc}</Description>
+                      <span className="text-sm font-semibold text-foreground">
+                        {amenity.label}
+                      </span>
+                      <Description className="text-xs text-muted mt-0.5">
+                        {amenity.desc}
+                      </Description>
                     </div>
                   </div>
                 ))}
@@ -473,11 +574,18 @@ export default function EditPropertyForm({ user }) {
             </div>
 
             <div className="flex flex-col gap-1.5 pt-2">
-              <Label className="text-sm font-semibold text-foreground">Custom Extra Features</Label>
+              <Label className="text-sm font-semibold text-foreground">
+                Custom Extra Features
+              </Label>
               <TextArea
                 placeholder="Unique highlights..."
                 value={formData.customAmenities}
-                onChange={(e) => setFormData((p) => ({ ...p, customAmenities: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    customAmenities: e.target.value,
+                  }))
+                }
                 className="w-full bg-card border border-border/30 rounded-xl p-4 min-h-[90px] text-sm text-foreground resize-none"
               />
             </div>
@@ -485,8 +593,16 @@ export default function EditPropertyForm({ user }) {
 
           {/* Small Screen Layout Submission Trigger */}
           <div className="lg:hidden">
-            <Button type="submit" disabled={loading || uploadingImages} className="w-full bg-primary text-white py-6 rounded-full font-bold text-base shadow-md">
-              {loading ? <Loader2 className="animate-spin" /> : "Save Specifications"}
+            <Button
+              type="submit"
+              disabled={loading || uploadingImages}
+              className="w-full bg-primary text-white py-6 rounded-full font-bold text-base shadow-md"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                "Save Specifications"
+              )}
             </Button>
           </div>
         </form>
@@ -495,9 +611,19 @@ export default function EditPropertyForm({ user }) {
         <div className="space-y-6 lg:sticky lg:top-6">
           <div className="bg-surface border border-border/20 rounded-3xl p-5 shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {user?.image && <Image src={user.image} alt="User" width={40} height={40} className="rounded-full" />}
+              {user?.image && (
+                <Image
+                  src={user.image}
+                  alt="User"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+              )}
               <div>
-                <h4 className="font-bold text-sm text-foreground">{user?.name || "Owner Profile"}</h4>
+                <h4 className="font-bold text-sm text-foreground">
+                  {user?.name || "Owner Profile"}
+                </h4>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-card text-muted rounded-md border border-border/20">
                   {user?.role || "Owner"}
                 </span>
@@ -507,13 +633,16 @@ export default function EditPropertyForm({ user }) {
 
           <div className="bg-surface border border-border/20 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border/10 pb-3">
-              <span className="text-xs font-bold text-muted uppercase tracking-wider">Editor Profile State</span>
+              <span className="text-xs font-bold text-muted uppercase tracking-wider">
+                Editor Profile State
+              </span>
               <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full flex items-center gap-1">
                 Active Edit Mode
               </span>
             </div>
             <p className="text-xs text-muted leading-relaxed">
-              Modifying active assets impacts live marketplace representations instantaneously upon saving adjustments.
+              Modifying active assets impacts live marketplace representations
+              instantaneously upon saving adjustments.
             </p>
           </div>
 
