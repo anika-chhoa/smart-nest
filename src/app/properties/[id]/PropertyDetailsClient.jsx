@@ -2,7 +2,6 @@
 
 import PropertyReviews from "@/components/tenant/PropertyReviews";
 import { addToFavorite } from "@/lib/actions/AddToFavorite";
-import { getFavoriteButtonToggle } from "@/lib/api/AddToFavourite";
 import { useSession } from "@/lib/auth-client";
 import {
   Button,
@@ -38,7 +37,7 @@ import {
   Wine,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -76,7 +75,6 @@ export default function PropertyDetailsClient({ property }) {
   const { data: session, status } = useSession();
   const user = session?.user;
 
-
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,7 +85,27 @@ export default function PropertyDetailsClient({ property }) {
   const [tenantFullName, setTenantFullName] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
 
+  const handleBooking=async()=>{
+    if (!user) {
+      router.push("/signin");
+      return;
+    }
+    if (user.role !== "tenant") {
+      router.push("/unauthorized");
+      return;
+    }
+    setIsModalOpen(true)
+  }
+
   const handleFavorite = async () => {
+    if (!user) {
+      router.push("/signin");
+      return;
+    }
+    if (user.role !== "tenant") {
+      router.push("/unauthorized");
+      return;
+    }
     const favoritePropertyInfo = {
       tenantId: user.id,
       tenantName: user.name,
@@ -96,8 +114,8 @@ export default function PropertyDetailsClient({ property }) {
       propertyTitle: property.title,
       propertyLocation: property.location,
       propertyImage: property.images,
-      propertyRentPrice:property.rentPrice,
-      propertyRentType:property.rentType,
+      propertyRentPrice: property.rentPrice,
+      propertyRentType: property.rentType,
       ownerEmail: property.userEmail,
       ownerId: property.userId,
       ownerName: property.userName,
@@ -336,7 +354,7 @@ export default function PropertyDetailsClient({ property }) {
                 {/* Trigger Booking Form via State Control */}
                 <motion.button
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={handleBooking}
                   className="w-full bg-[#043927] hover:bg-[#03291c] text-white font-body font-semibold transition-all duration-300 rounded-xl h-[48px] sm:h-[52px] flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md cursor-pointer group"
                 >
                   <span>Book Property</span>

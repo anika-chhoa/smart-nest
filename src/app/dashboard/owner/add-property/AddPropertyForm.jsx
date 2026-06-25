@@ -211,7 +211,7 @@ export default function AddPropertyForm({ user }) {
               </Label>
               <Input
                 name="title"
-                placeholder="e.g. Azure Cliffside Villa"
+                placeholder="Enter Your Property Title"
                 variant="bordered"
                 className="w-full text-sm"
                 value={formData.title}

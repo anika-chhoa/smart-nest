@@ -1,7 +1,8 @@
-import { serverDelete, serverMutation } from "../core/server"
+"use server"
+import { protectedMutation, serverDelete, serverMutation } from "../core/server"
 
 export const addToFavorite=async(favoriteProperty)=>{
-    return serverMutation("/api/favorites",favoriteProperty)
+    return protectedMutation("/api/favorites",favoriteProperty)
 }
 
 export const deleteFavorite = async (favoritePropertyId) => {

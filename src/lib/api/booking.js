@@ -1,9 +1,10 @@
-import { serverFetch } from "../core/server";
+"use server"
+import { protectedFetch, serverFetch } from "../core/server";
 
 export const getAllBookings= async()=>{
-  return serverFetch("/api/bookings")
+  return protectedFetch("/api/bookings")
 }
 
 export const getBookingsByUserId = async (userId) => {
-  return serverFetch(`/api/bookings?userId=${userId}`);
+  return protectedFetch(`/api/bookings?userId=${userId}`);
 };

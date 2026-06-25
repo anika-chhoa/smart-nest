@@ -1,5 +1,6 @@
-import { serverMutation } from "../core/server";
+"use server"
+import { protectedMutation } from "../core/server";
 
 export const rejectionReason = async (newRejection) => {
-  return serverMutation("/api/rejections", newRejection);
+  return protectedMutation("/api/rejections", newRejection);
 };

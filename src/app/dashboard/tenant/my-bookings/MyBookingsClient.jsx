@@ -5,10 +5,10 @@ import { Table } from "@heroui/react";
 import { Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
-// We receive the data directly from the parent Server Page layer or use this as a clean animated layout
+
 export default function MyBookingsClient({ bookings }) {
   
-  // Booking status styles matching your BookingRequestTableClient precisely
+
   const getBookingStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
       case "approved":

@@ -16,7 +16,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import Script from 'next/script';
 
 
 const Navbar = () => {

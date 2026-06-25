@@ -1,11 +1,13 @@
-import React from 'react';
+// import { auth } from "@/lib/auth";
+// import { headers } from "next/headers";
 
-const AdminDashboard = () => {
-    return (
-        <div>
-            Admin Dashboard
-        </div>
-    );
+const AdminDashboard = async () => {
+  // const { session } = await auth.api.getToken({
+  //   headers: await headers(),
+  // });
+  // const token = session?.token;
+  // console.log(token);
+  return <div>Admin Dashboard</div>;
 };
 
 export default AdminDashboard;

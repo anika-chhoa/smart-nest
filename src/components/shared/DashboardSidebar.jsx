@@ -195,10 +195,12 @@ export function DashboardSidebar({ user }) {
       { icon: Person, href: "/dashboard/owner/profile", label: "Profile" },
     ],
     admin: [
+      { icon: House, href: "/dashboard/admin", label: "Overview" },
       { icon: PersonFill, href: "/dashboard/admin/all-users", label: "All Users" },
       { icon: Briefcase, href: "/dashboard/admin/all-properties", label: "All Properties" },
       { icon: Envelope, href: "/dashboard/admin/all-bookings", label: "All Bookings" },
       { icon: SquareChartColumn, href: "/dashboard/admin/transactions", label: "Transactions" },
+      { icon: Person, href: "/dashboard/admin/profile", label: "Profile" },
     ],
   };
 

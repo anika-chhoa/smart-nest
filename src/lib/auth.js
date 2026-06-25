@@ -1,13 +1,14 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { jwt } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_URI);
+await client.connect();
 const db = client.db("smart-nest");
 
 export const auth = betterAuth({
   database: mongodbAdapter(db, {
-    // Optional: if you don't provide a client, database transactions won't be enabled.
     client,
   }),
   emailAndPassword: {
@@ -26,9 +27,7 @@ export const auth = betterAuth({
           return {
             data: {
               ...user,
-              // If signing up with credentials, use form values. If Google, fall back to "tenant"
               role: user.role || "tenant",
-              plan: user.plan || "tenant_free",
             },
           };
         },
@@ -43,4 +42,12 @@ export const auth = betterAuth({
       },
     },
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      strategy:'jwt',
+      maxAge: 60 * 60 * 24 * 30,
+    },
+  },
+  plugins: [jwt()],
 });

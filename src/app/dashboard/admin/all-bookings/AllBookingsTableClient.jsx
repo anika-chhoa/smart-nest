@@ -6,7 +6,9 @@ import { motion } from "framer-motion";
 import { Calendar, MapPin, Receipt, ShieldAlert, CheckCircle, Clock } from "lucide-react";
 import Image from "next/image";
 
+
 export default function AllBookingsTableClient({ initialBookings }) {
+
   const [bookings] = useState(initialBookings);
 
   // Status Badge visual configurations mapping matrix

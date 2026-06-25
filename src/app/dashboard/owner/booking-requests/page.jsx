@@ -7,6 +7,7 @@ import BookingRequestTableClient from './BookingRequestTableClient';
 const BookingRequestOwner = async () => {
     const owner = await getUserSession();
     const ownerBookingRequests = await getBookingsByUserId(owner.id);
+    console.log(ownerBookingRequests)
     
     // Ensure fallback to empty array if data layer fails or returns null
     const safeRequests = Array.isArray(ownerBookingRequests) ? ownerBookingRequests : [];

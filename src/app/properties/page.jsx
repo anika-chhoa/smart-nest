@@ -2,8 +2,9 @@ import { getFilteredProperties } from "@/lib/api/properties";
 import AllPropertiesClient from "./AllPropertiesClient";
 
 
+
 const AllPropertiesPage = async ({ searchParams }) => {
- 
+  
   const params = await searchParams;
 
   const queryFilters = {
