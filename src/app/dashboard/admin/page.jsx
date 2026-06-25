@@ -1,13 +1,11 @@
-// import { auth } from "@/lib/auth";
-// import { headers } from "next/headers";
 
-const AdminDashboard = async () => {
-  // const { session } = await auth.api.getToken({
-  //   headers: await headers(),
-  // });
-  // const token = session?.token;
-  // console.log(token);
-  return <div>Admin Dashboard</div>;
-};
+import { requireRole } from "@/lib/core/session";
+import AdminDashboardClient from "./AdminDashboardClient";
+import { getAdminAnalytics } from "@/lib/api/adminAnalytics";
 
-export default AdminDashboard;
+export default async function AdminDashboardPage() {
+  await requireRole("admin");
+  const analytics = await getAdminAnalytics();
+
+  return <AdminDashboardClient analytics={analytics} />;
+}

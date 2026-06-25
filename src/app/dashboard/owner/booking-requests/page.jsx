@@ -1,4 +1,4 @@
-import { getBookingsByUserId } from '@/lib/api/booking';
+import { getBookingsByOwnerId } from '@/lib/api/booking';
 import { getUserSession } from '@/lib/core/session';
 import React from 'react';
 import BookingRequestTableClient from './BookingRequestTableClient';
@@ -6,7 +6,7 @@ import BookingRequestTableClient from './BookingRequestTableClient';
 
 const BookingRequestOwner = async () => {
     const owner = await getUserSession();
-    const ownerBookingRequests = await getBookingsByUserId(owner.id);
+    const ownerBookingRequests = await getBookingsByOwnerId(owner.id);
     console.log(ownerBookingRequests)
     
     // Ensure fallback to empty array if data layer fails or returns null

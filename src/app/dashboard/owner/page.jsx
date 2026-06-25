@@ -1,18 +1,13 @@
-// import { auth } from '@/lib/auth';
-// import { headers } from 'next/headers';
-import React from 'react';
 
-const OwnerDashboard = async() => {
-    // const {session} = await auth.api.getSession({
-    //     headers: await headers(),
-    //   });
-    //   const token = session?.token;
-    //   console.log(token);
-    return (
-        <div>
-            Owner Dashboard
-        </div>
-    );
-};
 
-export default OwnerDashboard;
+import { requireRole } from "@/lib/core/session";
+import OwnerDashboardClient from "./OwnerDashboardClient";
+import { getOwnerAnalytics } from "@/lib/api/ownerAnalytics";
+
+
+export default async function OwnerDashboardPage() {
+  await requireRole("owner");
+  const analytics = await getOwnerAnalytics();
+
+  return <OwnerDashboardClient analytics={analytics} />;
+}
