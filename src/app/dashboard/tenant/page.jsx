@@ -1,18 +1,10 @@
-// import { auth } from "@/lib/auth";
-// import { headers } from "next/headers";
+import { requireRole } from "@/lib/core/session";
+import TenantDashboardClient from "./TenantDashboardClient";
+import { getTenantAnalytics } from "@/lib/api/tenantAnalytics";
 
-const TenantDashboard = async () => {
-// const {session} = await auth.api.getSession({
-//     headers: await headers(),
-//   });
-//   const token = session?.token;
-//   console.log(token);
-  return (
-    <div>
-      Tenant Dashboard
-      <p>Hi, Welcome Back!</p>
-    </div>
-  );
-};
+export default async function TenantDashboardPage() {
+  const user = await requireRole("tenant");
+  const analytics = await getTenantAnalytics();
 
-export default TenantDashboard;
+  return <TenantDashboardClient analytics={analytics} user={user} />;
+}
