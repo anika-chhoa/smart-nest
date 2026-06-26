@@ -143,7 +143,7 @@ export default async function Success({ searchParams }) {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full">
               <Link
-                href="/dashboard/tenant/bookings"
+                href="/dashboard/tenant/my-bookings"
                 className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-on-primary hover:bg-primary-fixed transition-all shadow-md font-medium text-sm group"
               >
                 View My Bookings

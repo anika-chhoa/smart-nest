@@ -146,6 +146,7 @@ export default function TenantDashboardClient({ analytics, user }) {
       sub: "in your collection",
     },
   ];
+  
 
   // max value for bar highlight
   const maxSpent = Math.max(...monthlySpending.map((m) => m.spent), 1);
