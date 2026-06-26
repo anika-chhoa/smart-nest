@@ -1,13 +1,14 @@
-
 import { getPropertyByPropertyId } from "@/lib/api/properties";
 import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/core/session";
 import { headers } from "next/headers";
 import PropertyDetailsClient from "./PropertyDetailsClient";
-import { requireUser } from "@/lib/core/session";
+import { notFound } from "next/navigation";
+
 
 const PropertyDetailsPage = async ({ params }) => {
   await requireUser();
-
+  
   const headersList = await headers();
 
   const response = await auth.api.getToken({ headers: headersList });
@@ -16,6 +17,9 @@ const PropertyDetailsPage = async ({ params }) => {
   const { id } = await params;
   const property = await getPropertyByPropertyId(id, token);
 
+  if (!property) {
+    notFound();
+  }
   const session = await auth.api.getSession({ headers: headersList });
   const user = session?.user;
 
@@ -28,7 +32,10 @@ const PropertyDetailsPage = async ({ params }) => {
       const tenantId = user.id?.toString();
 
       // ✅ Use process.env.API_URL (server-side) not NEXT_PUBLIC
-      const baseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const baseUrl =
+        process.env.API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:5000";
       const url = `${baseUrl}/api/favorites?tenantId=${tenantId}&propertyId=${propertyId}`;
 
       console.log("Fetching favorites URL:", url);
@@ -47,7 +54,14 @@ const PropertyDetailsPage = async ({ params }) => {
       console.error("Favorite fetch error:", err);
     }
   } else {
-    console.log("Skipping fetch — user:", user?.id, "role:", user?.role, "property:", property?._id);
+    console.log(
+      "Skipping fetch — user:",
+      user?.id,
+      "role:",
+      user?.role,
+      "property:",
+      property?._id,
+    );
   }
 
   if (!property) {
@@ -70,4 +84,3 @@ const PropertyDetailsPage = async ({ params }) => {
 };
 
 export default PropertyDetailsPage;
-

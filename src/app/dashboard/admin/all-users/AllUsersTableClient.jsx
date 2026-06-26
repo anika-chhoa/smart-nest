@@ -9,8 +9,9 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 
-export default function AllUsersTableClient({ initialUsers }) {
+export default function AllUsersTableClient({ initialUsersData }) {
   const router = useRouter();
+  const initialUsers=initialUsersData.data;
   const [users, setUsers] = useState(initialUsers);
   const [processingId, setProcessingId] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);

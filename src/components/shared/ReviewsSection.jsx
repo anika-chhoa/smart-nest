@@ -4,9 +4,31 @@ import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { Skeleton } from "@heroui/react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { getAllReviews } from "@/lib/api/reviews";
 
 const FALLBACK_BG = "#00234B";
+
+// Luxury stagger configuration for parent container
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+// Smooth lift-up animation for individual items
+const cardVariants = {
+  hidden: { opacity: 0, y: 25 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { type: "spring", stiffness: 50, damping: 15 } 
+  },
+};
 
 export default function ReviewsSection() {
   const [reviews, setReviews] = useState([]);
@@ -25,22 +47,47 @@ export default function ReviewsSection() {
   return (
     <section className="py-24 bg-[var(--surface-container-low)] dark:bg-[var(--surface-container)]/60 transition-colors duration-300 overflow-hidden">
       <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+        
+        {/* Animated Headers */}
         <div className="text-center mb-16">
-          <p className="text-xs uppercase tracking-[0.18em] font-semibold mb-2 text-secondary">
+          <motion.p 
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-xs uppercase tracking-[0.18em] font-semibold mb-2 text-secondary"
+          >
             What Tenants Say
-          </p>
-          <h2 className="font-heading text-4xl md:text-5xl font-normal text-midnight-emerald dark:text-primary">
+          </motion.p>
+          <motion.h2 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-heading text-4xl md:text-5xl font-normal text-midnight-emerald dark:text-primary"
+          >
             Tenant Experiences
-          </h2>
+          </motion.h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Animated Grid Container */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-50px" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
           {loading
-            ? Array.from({ length: 4 }).map((_, i) => <ReviewSkeleton key={i} />)
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <motion.div key={`skeleton-${i}`} variants={cardVariants}>
+                  <ReviewSkeleton />
+                </motion.div>
+              ))
             : reviews.map((review) => (
                 <ReviewCard key={review._id} review={review} />
               ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -56,7 +103,16 @@ function ReviewCard({ review }) {
     : "?";
 
   return (
-    <div className="flex flex-col p-8 rounded-2xl border border-border/10 bg-card dark:bg-[var(--surface-container)] shadow-sm transition-all duration-300 hover:scale-[1.02]">
+    <motion.div 
+      variants={cardVariants}
+      whileHover={{ 
+        y: -6, 
+        scale: 1.015,
+        boxShadow: "0 12px 30px -10px rgba(0,0,0,0.08)"
+      }}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      className="flex flex-col p-8 rounded-2xl border border-border/10 bg-card dark:bg-[var(--surface-container)] shadow-sm transition-colors duration-300 h-full"
+    >
       {/* Stars */}
       <div className="flex items-center gap-1 mb-4">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -88,7 +144,9 @@ function ReviewCard({ review }) {
                   className="rounded-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
-                    e.currentTarget.nextElementSibling.style.display = "flex";
+                    if (e.currentTarget.nextElementSibling) {
+                      e.currentTarget.nextElementSibling.style.display = "flex";
+                    }
                   }}
                 />
                 <div
@@ -119,7 +177,7 @@ function ReviewCard({ review }) {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

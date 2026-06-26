@@ -1,4 +1,3 @@
-
 "use client";
 
 import { deleteFavorite } from "@/lib/actions/AddToFavorite";
@@ -6,10 +5,12 @@ import { TrashBin } from "@gravity-ui/icons";
 import { Pagination, Table } from "@heroui/react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-export default function FavoritePropertiesTableClient({ favoritePropertiesData }) {
+export default function FavoritePropertiesTableClient({
+  favoritePropertiesData,
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -103,7 +104,16 @@ export default function FavoritePropertiesTableClient({ favoritePropertiesData }
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pt-8 px-4">
+      <div>
+        <h1 className="font-heading text-3xl font-bold text-primary">
+          My Favorites
+        </h1>
+        <p className="font-body text-sm text-muted mt-1">
+          Manage your property reservations, tracking details and payment
+          states.
+        </p>
+      </div>
       <div className="w-full bg-surface rounded-2xl sm:rounded-3xl shadow-sm border border-border/40 overflow-hidden">
         <Table.ScrollContainer className="w-full overflow-x-auto object-contain last:border-0">
           <Table className="w-full min-w-[600px] text-left border-collapse table-auto">
@@ -173,7 +183,8 @@ export default function FavoritePropertiesTableClient({ favoritePropertiesData }
 
                       <Table.Cell className="p-4 whitespace-nowrap">
                         <div className="font-body text-sm font-semibold text-primary">
-                          ${Number(item.propertyRentPrice || 0).toLocaleString()}
+                          $
+                          {Number(item.propertyRentPrice || 0).toLocaleString()}
                         </div>
                       </Table.Cell>
 
@@ -187,12 +198,19 @@ export default function FavoritePropertiesTableClient({ favoritePropertiesData }
                         <div className="flex items-center justify-end">
                           <button
                             onClick={() =>
-                              handleDeleteConfirmation(item._id, item.propertyTitle)
+                              handleDeleteConfirmation(
+                                item._id,
+                                item.propertyTitle,
+                              )
                             }
                             title="Remove from Favorites"
                             className="p-1.5 text-muted hover:text-danger rounded-md hover:bg-danger/10 transition-colors cursor-pointer inline-flex items-center justify-center"
                           >
-                            <TrashBin width={18} height={18} className="text-secondary" />
+                            <TrashBin
+                              width={18}
+                              height={18}
+                              className="text-secondary"
+                            />
                           </button>
                         </div>
                       </Table.Cell>
@@ -223,10 +241,13 @@ export default function FavoritePropertiesTableClient({ favoritePropertiesData }
                 <Pagination.Previous
                   disabled={currentPage === 1}
                   onClick={() =>
-                    currentPage > 1 && updateSearchParam("page", currentPage - 1)
+                    currentPage > 1 &&
+                    updateSearchParam("page", currentPage - 1)
                   }
                   className={`flex items-center gap-1 text-sm font-body ${
-                    currentPage === 1 ? "opacity-50 pointer-events-none" : "cursor-pointer"
+                    currentPage === 1
+                      ? "opacity-50 pointer-events-none"
+                      : "cursor-pointer"
                   }`}
                 >
                   <Pagination.PreviousIcon />
@@ -240,7 +261,9 @@ export default function FavoritePropertiesTableClient({ favoritePropertiesData }
                     isActive={currentPage === pageNum}
                     onClick={() => updateSearchParam("page", pageNum)}
                     className={`cursor-pointer font-body text-sm relative transition-colors ${
-                      currentPage === pageNum ? "bg-secondary backdrop-blur-sm text-white" : ""
+                      currentPage === pageNum
+                        ? "bg-secondary backdrop-blur-sm text-white"
+                        : ""
                     }`}
                   >
                     {pageNum}
@@ -256,7 +279,9 @@ export default function FavoritePropertiesTableClient({ favoritePropertiesData }
                     updateSearchParam("page", currentPage + 1)
                   }
                   className={`flex items-center gap-1 text-sm font-body ${
-                    currentPage === totalPages ? "opacity-50 pointer-events-none" : "cursor-pointer"
+                    currentPage === totalPages
+                      ? "opacity-50 pointer-events-none"
+                      : "cursor-pointer"
                   }`}
                 >
                   <span>Next</span>

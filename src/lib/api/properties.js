@@ -1,6 +1,5 @@
 import { protectedFetch, serverFetch } from "../core/server";
 
-
 export const getAllProperties = async (page = 1, limit = 9) => {
   return serverFetch(`/api/properties?page=${page}&limit=${limit}`);
 };
@@ -44,6 +43,8 @@ export const getPropertiesByUserId = async (userId) => {
   return protectedFetch(`/api/properties?userId=${userId}`);
 };
 
-export const getPropertyByPropertyId = async (id,token) => {
-  return protectedFetch(`/api/properties/${id}`,token);
+export const getPropertyByPropertyId = async (id, token) => {
+  const result = protectedFetch(`/api/properties/${id}`, token);
+  if (!result) return null;
+  return result;
 };

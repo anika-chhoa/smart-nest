@@ -1,5 +1,6 @@
 import Banner from "@/components/shared/Banner";
 import FeaturedProperties from "@/components/shared/FeaturedProperties";
+import Footer from "@/components/shared/Footer";
 import RentalStatistics from "@/components/shared/RentalStatistics";
 import ReviewsSection from "@/components/shared/ReviewsSection";
 import TopLocations from "@/components/shared/TopLocations";
@@ -18,6 +19,7 @@ const HomePage = () => {
       <TopLocations/>
       <ReviewsSection/>
       <TrustedOwners/>
+      <Footer/>
     </div>
   );
 };

@@ -5,8 +5,9 @@ import React from 'react';
 
 export const dynamic = 'force-dynamic';
 
-const AllUsersPage = async () => {
-    const allUsers = await getAllUsers();
+const AllUsersPage = async ({searchParams}) => {
+    const page = searchParams?.page || 1;
+  const allUsersData = await getAllUsers(page);
 
 
     return (
@@ -20,7 +21,7 @@ const AllUsersPage = async () => {
                 </p>
             </div>
             
-            <AllUsersTableClient initialUsers={allUsers} />
+            <AllUsersTableClient initialUsersData={allUsersData} />
         </div>
     );
 };
