@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function Footer() {
   // Stagger configurations for a premium appearance
@@ -42,9 +43,20 @@ export default function Footer() {
         
         {/* Brand Column */}
         <motion.div variants={itemVariants} className="flex flex-col">
-          <Link href="/" className="font-heading text-2xl text-champagne mb-6 block tracking-wide hover:opacity-90 transition-opacity">
-            LUXE ESTATE
-          </Link>
+           <Link href="/">
+              <div className="flex items-center gap-3">
+                <Image
+                  src="https://res.cloudinary.com/drvj2pqs7/image/upload/v1782473343/SmartNest_Final_Logo_xc47mk.png"
+                  alt="SmartNest Logo"
+                  width={36}
+                  height={36}
+                  className="object-contain"
+                />
+                <p className="font-heading font-bold text-2xl tracking-tight">
+                  Smart<span className="text-secondary">Nest</span>
+                </p>
+              </div>
+            </Link>
           <p className="font-body text-sm text-white/70 mb-8 max-w-xs leading-relaxed">
             Connecting discerning tenants with the world's most exceptional living spaces.
           </p>

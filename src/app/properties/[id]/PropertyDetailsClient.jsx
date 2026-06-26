@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
 const amenityIconMap = {
@@ -82,6 +82,10 @@ export default function PropertyDetailsClient({
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(isFavorited);
   const [favoriteId, setFavoriteId] = useState(initialFavoriteId);
+  useEffect(() => {
+    setIsFavorite(isFavorited);
+    setFavoriteId(initialFavoriteId);
+  }, [isFavorited, initialFavoriteId]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -93,7 +97,7 @@ export default function PropertyDetailsClient({
 
   const handleBooking = async () => {
     if (!user) {
-      router.push("/signin?redirect=/properties");
+      router.push(`/signin?redirect=/properties/${property._id}`)
       return;
     }
     if (user.role !== "tenant") {
@@ -105,7 +109,7 @@ export default function PropertyDetailsClient({
 
   const handleFavorite = async () => {
     if (!user) {
-      router.push("/signin?redirect=/properties");
+      router.push(`/signin?redirect=/properties/${property._id}`)
       return;
     }
     if (user.role !== "tenant") {

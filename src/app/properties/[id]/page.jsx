@@ -2,13 +2,12 @@ import { getPropertyByPropertyId } from "@/lib/api/properties";
 import { auth } from "@/lib/auth";
 import { requireUser } from "@/lib/core/session";
 import { headers } from "next/headers";
-import PropertyDetailsClient from "./PropertyDetailsClient";
 import { notFound } from "next/navigation";
-
+import PropertyDetailsClient from "./PropertyDetailsClient";
 
 const PropertyDetailsPage = async ({ params }) => {
   await requireUser();
-  
+
   const headersList = await headers();
 
   const response = await auth.api.getToken({ headers: headersList });
@@ -31,18 +30,25 @@ const PropertyDetailsPage = async ({ params }) => {
       const propertyId = property._id?.toString();
       const tenantId = user.id?.toString();
 
-      // ✅ Use process.env.API_URL (server-side) not NEXT_PUBLIC
-      const baseUrl =
-        process.env.API_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        "http://localhost:5000";
+      const baseUrl = process.env.NEXT_PUBLIC_URL;
       const url = `${baseUrl}/api/favorites?tenantId=${tenantId}&propertyId=${propertyId}`;
 
-      console.log("Fetching favorites URL:", url);
-      console.log("tenantId:", tenantId, "propertyId:", propertyId);
+      const res = await fetch(url, {
+        cache: "no-store",
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
+      });
+      // const favorites = await res.json();
 
-      const res = await fetch(url, { cache: "no-store" });
-      const favorites = await res.json();
+      // console.log("Favorites result:", favorites);
+
+      // if (Array.isArray(favorites) && favorites.length > 0) {
+      //   isFavorited = true;
+      //   initialFavoriteId = favorites[0]._id?.toString();
+      // }
+      const json = await res.json();
+      const favorites = json.data ?? [];
 
       console.log("Favorites result:", favorites);
 

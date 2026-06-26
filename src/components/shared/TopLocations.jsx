@@ -26,7 +26,7 @@ export default function TopLocations() {
       className: "md:col-span-1 md:row-span-1 h-[188px] md:h-auto" 
     },
     { 
-      name: "Riviera", 
+      name: "Dhaka", 
       count: "", 
       img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDvTy8i8OOl_CtVran0yhUzfDbMJ9qkKcGDrlm5_7We3kG8L0GEmnNOMbwHoLRlEAlvb1ITxLtzTveWIdYZAyGgfXU4_xaKyapVplAzmU0z70uYwOMdAk_vQ6vFtL-opKldCUhJdr2FyMlgI08r8P9-ENkYoU-AMV_wE74teDH1otQmq6WKUPzngkW0MHxCmCyDUOLb13LUU0cBxYf3cJSa8ELxQ9Icb5ihXW28dLpbCqVyDc21ZVj3h3vLajVSRLRucNF35lMAns48",
       className: "md:col-span-1 md:row-span-1 h-[188px] md:h-auto" 

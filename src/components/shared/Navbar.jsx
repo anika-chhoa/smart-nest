@@ -60,11 +60,19 @@ const Navbar = () => {
 
             <Link href="/">
               <div className="flex items-center gap-3">
+                <Image
+                  src="https://res.cloudinary.com/drvj2pqs7/image/upload/v1782473343/SmartNest_Final_Logo_xc47mk.png"
+                  alt="SmartNest Logo"
+                  width={36}
+                  height={36}
+                  className="object-contain"
+                />
                 <p className="font-heading font-bold text-2xl tracking-tight">
                   Smart<span className="text-secondary">Nest</span>
                 </p>
               </div>
             </Link>
+
           </div>
 
           {/* Center: Desktop Navigation Links (Increased text size for professional layout) */}
