@@ -1,4 +1,3 @@
-
 "use client";
 
 import PropertyReviews from "@/components/tenant/PropertyReviews";
@@ -94,7 +93,7 @@ export default function PropertyDetailsClient({
 
   const handleBooking = async () => {
     if (!user) {
-      router.push("/signin");
+      router.push("/signin?redirect=/properties");
       return;
     }
     if (user.role !== "tenant") {
@@ -106,7 +105,7 @@ export default function PropertyDetailsClient({
 
   const handleFavorite = async () => {
     if (!user) {
-      router.push("/signin");
+      router.push("/signin?redirect=/properties");
       return;
     }
     if (user.role !== "tenant") {
@@ -114,7 +113,6 @@ export default function PropertyDetailsClient({
       return;
     }
 
-   
     if (isFavorite) return;
 
     const favoritePropertyInfo = {
@@ -140,7 +138,7 @@ export default function PropertyDetailsClient({
         icon: "❤️",
       });
     } else if (result?.msg === "Already Exists!") {
-      setIsFavorite(true); 
+      setIsFavorite(true);
       toast("Already saved to your collection!", { icon: "❤️" });
     } else {
       toast.error("Failed to update selection collection profile.");
@@ -154,7 +152,6 @@ export default function PropertyDetailsClient({
   const mergedAmenities = Array.from(
     new Set([...baseAmenities, ...specializedAmenities]),
   );
-  
 
   return (
     <div className="w-full min-h-screen bg-background pb-16">

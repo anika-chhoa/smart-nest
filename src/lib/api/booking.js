@@ -1,4 +1,4 @@
-"use server";
+
 import { serverFetch } from "../core/server";
 
 export const getAllBookings = async (token) => {

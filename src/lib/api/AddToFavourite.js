@@ -1,3 +1,5 @@
+
+
 import { protectedFetch, serverFetch } from "../core/server";
 
 export const getFavoritePropertyByUserId = async (tenantId, page=1) => {

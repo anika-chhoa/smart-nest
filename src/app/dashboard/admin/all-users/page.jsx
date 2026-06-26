@@ -6,7 +6,7 @@ import React from 'react';
 export const dynamic = 'force-dynamic';
 
 const AllUsersPage = async ({searchParams}) => {
-    const page = searchParams?.page || 1;
+     const page = (await searchParams)?.page || 1;
   const allUsersData = await getAllUsers(page);
 
 

@@ -48,7 +48,6 @@ const summaryCards = (analytics) => [
   },
 ];
 
-// Custom tooltip for the chart
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -66,10 +65,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function OwnerDashboardClient({ analytics }) {
   const cards = summaryCards(analytics);
   const monthlyData = analytics.monthlyEarnings || [];
-  
 
   return (
-    <div className="p-4 max-w-7xl mx-auto space-y-8">
+    // Tightened global vertical layout container spacing from space-y-8 to space-y-6
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -79,13 +78,13 @@ export default function OwnerDashboardClient({ analytics }) {
         <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
           Owner <span className="text-secondary">Dashboard</span>
         </h1>
-        <p className="font-body text-sm text-muted-foreground mt-1">
+        <p className="font-body text-sm text-muted-foreground mt-0.5">
           Your property performance at a glance
         </p>
       </motion.div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      {/* Summary Cards Grid */}
+      <div className="grid grid-cols-1 grid-rows-3 xs:grid-cols-2 xs:grid-rows-none md:grid-cols-3 gap-4 sm:gap-6">
         {cards.map((card, i) => (
           <motion.div
             key={card.label}
@@ -93,16 +92,16 @@ export default function OwnerDashboardClient({ analytics }) {
             variants={cardVariants}
             initial="hidden"
             animate="show"
-            className={`rounded-2xl border ${card.border} ${card.bg} p-5 sm:p-6 flex items-center gap-4 shadow-sm`}
+            className={`rounded-2xl border ${card.border} ${card.bg} p-5 lg:p-6 flex flex-col xl:flex-row xl:items-center gap-3 xl:gap-4 shadow-sm min-w-0`}
           >
-            <div className={`p-3 rounded-xl bg-background/60 border ${card.border} ${card.color}`}>
+            <div className={`p-3 rounded-xl bg-background/60 border ${card.border} ${card.color} w-11 h-11 flex items-center justify-center shrink-0`}>
               {card.icon}
             </div>
-            <div>
-              <p className="font-body text-xs text-muted uppercase tracking-wider font-semibold">
+            <div className="min-w-0 w-full">
+              <p className="font-body text-xs text-muted uppercase tracking-wider font-semibold block">
                 {card.label}
               </p>
-              <p className={`font-heading text-2xl sm:text-3xl font-bold mt-0.5 ${card.color}`}>
+              <p className={`font-heading text-2xl lg:text-3xl font-bold mt-0.5 tracking-tight truncate ${card.color}`}>
                 {card.value}
               </p>
             </div>
@@ -110,14 +109,14 @@ export default function OwnerDashboardClient({ analytics }) {
         ))}
       </div>
 
-      {/* Monthly Earnings Chart */}
+      {/* Monthly Earnings Chart Container */}
       <motion.div
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.6 }}
-        className="bg-surface rounded-3xl border border-border/40 shadow-sm p-5 sm:p-8"
+        className="bg-surface rounded-3xl border border-border/40 shadow-sm p-5 sm:p-6" // Slightly reduced padding for a tighter container look
       >
-        <div className="mb-6">
+        <div className="mb-4"> {/* Reduced header margin bottom to pull the chart closer */}
           <h2 className="font-heading text-xl font-bold text-foreground tracking-tight">
             Monthly <span className="text-secondary">Earnings</span>
           </h2>
@@ -131,40 +130,42 @@ export default function OwnerDashboardClient({ analytics }) {
             No earnings data available yet.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={monthlyData}
-              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(128,128,128,0.15)"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 11, fontFamily: "inherit", fill: "var(--color-muted, #888)" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fontFamily: "inherit", fill: "var(--color-muted, #888)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
-                width={48}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="earnings"
-                stroke="#043927"
-                strokeWidth={2.5}
-                dot={{ r: 4, fill: "#043927", strokeWidth: 2, stroke: "#fff" }}
-                activeDot={{ r: 6, fill: "#043927", stroke: "#fff", strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={260}> {/* Adjusted height slightly to maintain professional dashboard ratios */}
+              <LineChart
+                data={monthlyData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }} // Normalized internal canvas margins
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(128,128,128,0.15)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 11, fontFamily: "inherit", fill: "var(--color-muted, #888)" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fontFamily: "inherit", fill: "var(--color-muted, #888)" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                  width={40}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="earnings"
+                  stroke="#043927"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: "#043927", strokeWidth: 2, stroke: "#fff" }}
+                  activeDot={{ r: 6, fill: "#043927", stroke: "#fff", strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </motion.div>
     </div>

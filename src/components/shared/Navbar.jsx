@@ -17,7 +17,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -38,6 +37,7 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    toast.success("Successfully Logged out");
   };
 
   // Compute uniform dynamic dashboard path matching user roles
@@ -47,7 +47,6 @@ const Navbar = () => {
     <div className="font-body">
       <nav className="sticky top-0 left-0 right-0 z-100 w-full border-b border-border/20 bg-background/70 backdrop-blur-lg text-foreground transition-colors duration-200">
         <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-          
           {/* Left: Mobile Toggle & Brand Logo */}
           <div className="flex items-center gap-4">
             <button
@@ -90,7 +89,7 @@ const Navbar = () => {
               <li>
                 <Link
                   href={dashboardPath}
-                  className="text-[15px] font-medium text-primary dark:text-secondary hover:opacity-80 transition-colors"
+                  className="text-[15px] font-medium text-primary dark:text-secondary hover:text-secondary transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -180,6 +179,9 @@ const Navbar = () => {
                           </p>
                           <p className="text-sm font-semibold truncate">
                             {user?.email}
+                          </p>
+                          <p className="text-sm font-semibold truncate mt-2">
+                            {user?.role}
                           </p>
                         </div>
 

@@ -1,3 +1,4 @@
+import "server-only";
 import { getUserToken } from "./session";
 
 const baseURL = process.env.NEXT_PUBLIC_URL;

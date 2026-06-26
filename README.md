@@ -1,36 +1,238 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+````markdown
+# 🏡 SmartNest
 
-## Getting Started
+SmartNest is a full-stack property rental and booking platform where property owners can list rental properties and tenants can discover, book, and securely pay reservation fees online. The platform provides a complete rental management system with role-based access control, secure authentication, online payments, booking management, analytics, and an intuitive dashboard for every user role.
 
-First, run the development server:
+## 🌐 Live Demo
+
+- **Live Website:** Coming Soon
+- **Client Repository:** Coming Soon
+- **Server Repository:** Coming Soon
+
+---
+
+## ✨ Features
+
+- 🔐 JWT & Better Auth Authentication
+- 👥 Role-Based Access Control (Admin, Owner & Tenant)
+- 🏠 Property Listing & Management
+- 🔎 Search, Filter & Sorting
+- ❤️ Add Property to Favorites
+- 📅 Property Booking System
+- 💳 Secure Stripe Payment Integration
+- 📄 Booking History
+- 📊 Dashboard Analytics with Recharts
+- 📈 Monthly Earnings Chart
+- 📑 Property Approval & Rejection Workflow
+- 👨‍💼 Admin Dashboard
+- 👤 Owner Dashboard
+- 🙋 Tenant Dashboard
+- 📱 Fully Responsive Design
+- ⚡ Server-side Pagination
+- 🎨 Smooth Animations with Framer Motion
+- 🔥 Modern UI with HeroUI & Tailwind CSS
+
+---
+
+## 👤 User Roles
+
+### 👨‍💼 Admin
+
+- Manage all users
+- Change user roles
+- Approve or reject properties
+- Monitor all bookings
+- View transactions
+- Delete or update properties
+
+### 🏠 Property Owner
+
+- Add new properties
+- Update property information
+- Delete properties
+- View booking requests
+- Approve or reject bookings
+- View earnings analytics
+
+### 🙋 Tenant
+
+- Browse approved properties
+- Search & filter properties
+- Add favorites
+- Book properties
+- Pay reservation fees
+- Leave reviews & ratings
+- Manage bookings
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+- Next.js
+- JavaScript
+- Tailwind CSS
+- HeroUI
+- Framer Motion
+- Recharts
+- Lucide React
+
+### Backend
+
+- Express.js
+- MongoDB
+- Better Auth
+- JWT
+- Stripe
+
+---
+
+## 📦 Packages Used
+
+### Frontend
+
+- next
+- react
+- react-dom
+- tailwindcss
+- @heroui/react
+- @heroui/styles
+- better-auth
+- @better-auth/mongo-adapter
+- framer-motion
+- recharts
+- stripe
+- @stripe/stripe-js
+- react-hot-toast
+- react-icons
+- lucide-react
+- next-themes
+- mongodb
+
+### Development
+
+- eslint
+- eslint-config-next
+
+---
+
+## 🚀 Installation
+
+### Clone the repositories
+
+```bash
+git clone <client-repository-link>
+
+git clone <server-repository-link>
+```
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Create Environment Variables
+
+Frontend
+
+```env
+NEXT_PUBLIC_API_URL=
+
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+```
+
+Backend
+
+```env
+PORT=
+
+MONGODB_URI=
+
+JWT_SECRET=
+
+BETTER_AUTH_SECRET=
+
+BETTER_AUTH_URL=
+
+STRIPE_SECRET_KEY=
+```
+
+### Run the project
+
+Frontend
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Backend
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📊 Main Functionalities
 
-To learn more about Next.js, take a look at the following resources:
+- User Registration & Login
+- Social Authentication
+- Secure JWT Authentication
+- Property CRUD Operations
+- Property Approval System
+- Booking Management
+- Stripe Payment Gateway
+- Favorite Properties
+- Review & Rating System
+- Dashboard Analytics
+- Monthly Earnings Report
+- Pagination
+- Backend Filtering
+- Backend Searching
+- Sorting
+- Responsive Dashboard
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📱 Responsive Design
 
-## Deploy on Vercel
+The application is fully responsive and optimized for:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Desktop
+- Laptop
+- Tablet
+- Mobile
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🔒 Security
+
+- JWT Authentication
+- Better Auth Session Management
+- Protected API Routes
+- Role-Based Authorization
+- Environment Variable Protection
+- Secure MongoDB Credentials
+
+---
+
+## 🔮 Future Improvements
+
+- Property Wishlist Notifications
+- Email Notifications
+- Real-time Chat
+- Property Recommendation System
+- Dark Mode
+- Google Maps Integration
+- Multi-language Support
+
+---
+
+## 👨‍💻 Author
+
+**Anika Mizan**
+
+If you like this project, feel free to ⭐ the repository.
+````
