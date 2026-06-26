@@ -6,13 +6,13 @@ import { authClient } from "@/lib/auth-client";
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FcGoogle } from "react-icons/fc";
 import toast from "react-hot-toast";
+import { FcGoogle } from "react-icons/fc";
 
 export default function SignInPage() {
   const router = useRouter();
-  const searchParams=useSearchParams();
-    const redirectTo=searchParams.get("redirect") || "/";
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,6 +25,12 @@ export default function SignInPage() {
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
+    if (data.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await authClient.signIn.email({
         email: data.email,
@@ -35,7 +41,7 @@ export default function SignInPage() {
         setError(result.error.message);
         return;
       }
-      toast.success("Successfully Logged in")
+      toast.success("Successfully Logged in");
       router.push(redirectTo);
     } catch (err) {
       setError(err?.message || "Invalid email or password.");
@@ -49,8 +55,9 @@ export default function SignInPage() {
       setError("");
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
       });
+      toast.success("Successfully Logged in");
+      router.push(redirectTo);
     } catch (err) {
       setError(err?.message || "Google authentication failed.");
     }
@@ -112,7 +119,7 @@ export default function SignInPage() {
                   required
                   name="email"
                   type="email"
-                  placeholder="john@example.com"
+                  placeholder="Enter Your Email"
                   className="w-full pl-10 pr-4 py-3 bg-card border border-border/30 rounded-xl text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-secondary transition-colors"
                 />
               </div>
@@ -131,7 +138,8 @@ export default function SignInPage() {
                   required
                   name="password"
                   type="password"
-                  placeholder="••••••••"
+                  minLength={8}
+                  placeholder="Enter Your Password"
                   className="w-full pl-10 pr-4 py-3 bg-card border border-border/30 rounded-xl text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-secondary transition-colors"
                 />
               </div>
@@ -152,7 +160,7 @@ export default function SignInPage() {
           <p className="text-center text-sm text-muted mt-4">
             Don't have an account yet?{" "}
             <Link
-              href={`/auth/signup?redirect=${redirectTo}`}
+              href={`/signup?redirect=${redirectTo}`}
               className="text-secondary font-semibold hover:underline"
             >
               Create one here

@@ -1,16 +1,11 @@
 "use server";
 
-import {
-  protectedMutation,
-  serverDelete,
-  serverMutation,
-} from "../core/server";
+import { protectedMutation, serverDelete, serverMutation } from "../core/server";
 import { getUserToken } from "../core/session";
 
 export const createProperty = async (newProperty) => {
   return protectedMutation("/api/properties", newProperty);
 };
-
 
 export const updateProperty = async (propertyId, updatedProperty) => {
   const token = await getUserToken();

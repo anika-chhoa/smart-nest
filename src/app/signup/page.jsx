@@ -1,13 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import {
-  ArrowRight,
-  Image as ImageIcon,
-  Lock,
-  Mail,
-  User,
-} from "lucide-react";
+import { ArrowRight, Image as ImageIcon, Lock, Mail, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -30,13 +24,19 @@ export default function SignUpPage() {
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
+    if (data.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await authClient.signUp.email({
         email: data.email,
         password: data.password,
         name: data.name,
         image: data.image || null,
-        role:"tenant",
+        role: "tenant",
       });
       toast.success("Successfully Signed up");
       router.push(redirectTo);
@@ -53,8 +53,9 @@ export default function SignUpPage() {
       setRole("tenant");
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
       });
+      toast.success("Successfully Signed up");
+      router.push(redirectTo);
     } catch (err) {
       setError(err?.message || "Google registration failed.");
     }
@@ -119,7 +120,7 @@ export default function SignUpPage() {
                   required
                   name="name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="Enter Your Name"
                   className="w-full pl-10 pr-4 py-3 bg-card border border-border/30 rounded-xl text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-secondary transition-colors"
                 />
               </div>
@@ -137,7 +138,7 @@ export default function SignUpPage() {
                 <input
                   name="image"
                   type="url"
-                  placeholder="https://example.com/avatar.jpg"
+                  placeholder="Add Your Image URL"
                   className="w-full pl-10 pr-4 py-3 bg-card border border-border/30 rounded-xl text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-secondary transition-colors"
                 />
               </div>
@@ -156,7 +157,7 @@ export default function SignUpPage() {
                   required
                   name="email"
                   type="email"
-                  placeholder="john@example.com"
+                  placeholder="Enter Your Email"
                   className="w-full pl-10 pr-4 py-3 bg-card border border-border/30 rounded-xl text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-secondary transition-colors"
                 />
               </div>
@@ -175,7 +176,8 @@ export default function SignUpPage() {
                   required
                   name="password"
                   type="password"
-                  placeholder="••••••••"
+                  minLength={8}
+                  placeholder="Enter Your Password"
                   className="w-full pl-10 pr-4 py-3 bg-card border border-border/30 rounded-xl text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:border-secondary transition-colors"
                 />
               </div>

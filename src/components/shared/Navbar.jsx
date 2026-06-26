@@ -45,7 +45,7 @@ const Navbar = () => {
 
   return (
     <div className="font-body">
-      <nav className="sticky top-0 z-40 w-full border-b border-border/20 bg-background/70 backdrop-blur-lg text-foreground transition-colors duration-200">
+      <nav className="sticky top-0 left-0 right-0 z-100 w-full border-b border-border/20 bg-background/70 backdrop-blur-lg text-foreground transition-colors duration-200">
         <header className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           
           {/* Left: Mobile Toggle & Brand Logo */}

@@ -114,7 +114,7 @@ export default function PropertyDetailsClient({
       return;
     }
 
-    // Already saved — button should be disabled, this is just a safeguard
+   
     if (isFavorite) return;
 
     const favoritePropertyInfo = {
@@ -140,7 +140,7 @@ export default function PropertyDetailsClient({
         icon: "❤️",
       });
     } else if (result?.msg === "Already Exists!") {
-      setIsFavorite(true); // ✅ force UI to red/disabled even if DB already had it
+      setIsFavorite(true); 
       toast("Already saved to your collection!", { icon: "❤️" });
     } else {
       toast.error("Failed to update selection collection profile.");
@@ -154,10 +154,7 @@ export default function PropertyDetailsClient({
   const mergedAmenities = Array.from(
     new Set([...baseAmenities, ...specializedAmenities]),
   );
-  console.log("isFavorited:", isFavorited);
-  console.log("initialFavoriteId:", initialFavoriteId);
-  console.log("user.id:", user?.id);
-  console.log("property._id:", property?._id);
+  
 
   return (
     <div className="w-full min-h-screen bg-background pb-16">
@@ -313,7 +310,7 @@ export default function PropertyDetailsClient({
                   <motion.div
                     variants={itemVariants}
                     key={index}
-                    className="flex flex-col items-start gap-3 sm:gap-4 p-4 sm:p-5 bg-surface-container-low border border-border/20 rounded-xl hover:shadow-md transition-all duration-300"
+                    className="flex flex-col justify-center items-center gap-3 sm:gap-4 p-4 sm:p-5 bg-surface-container-low border border-border/20 rounded-xl hover:shadow-md transition-all duration-300"
                   >
                     <div className="p-2 sm:p-2.5 bg-surface-container-lowest rounded-xl shadow-xs border border-border/10">
                       {mappedIcon}

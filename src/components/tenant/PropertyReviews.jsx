@@ -1,6 +1,7 @@
 import { postReviews } from "@/lib/actions/review";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare, Star } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -20,6 +21,14 @@ export default function PropertyReviews({
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      router.push("/signin");
+      return;
+    }
+    if (currentUser.role !== "tenant") {
+      router.push("/unauthorized");
+      return;
+    }
     if (!currentUser) {
       toast.error("Please log in to leave a review.");
       return;
@@ -162,8 +171,9 @@ export default function PropertyReviews({
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-surface-container rounded-full flex items-center justify-center text-primary font-heading font-bold text-xs uppercase shadow-inner">
-                    {rev.tenantName?.charAt(0) || "U"}
+                    <Image height={100} width={100} src={rev.tenantImage} alt={rev.tenantName}/>
                   </div>
+
                   <div>
                     <h4 className="font-body font-bold text-sm text-primary leading-tight">
                       {rev.tenantName}

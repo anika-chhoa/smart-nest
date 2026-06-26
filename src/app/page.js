@@ -1,7 +1,9 @@
 import Banner from "@/components/shared/Banner";
 import FeaturedProperties from "@/components/shared/FeaturedProperties";
 import RentalStatistics from "@/components/shared/RentalStatistics";
+import ReviewsSection from "@/components/shared/ReviewsSection";
 import TopLocations from "@/components/shared/TopLocations";
+import TrustedOwners from "@/components/shared/TrustedOwners";
 import WhyChooseUs from "@/components/shared/WhyChooseUs";
 
 
@@ -14,6 +16,8 @@ const HomePage = () => {
       <WhyChooseUs/>
       <RentalStatistics/>
       <TopLocations/>
+      <ReviewsSection/>
+      <TrustedOwners/>
     </div>
   );
 };
