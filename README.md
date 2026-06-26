@@ -5,9 +5,9 @@ SmartNest is a full-stack property rental and booking platform where property ow
 
 ## 🌐 Live Demo
 
-- **Live Website:** Coming Soon
-- **Client Repository:** Coming Soon
-- **Server Repository:** Coming Soon
+- **Live Website:https://smart-nest-kappa.vercel.app
+- **Client Repository:https://github.com/anika-chhoa/smart-nest.git
+- **Server Repository:https://github.com/anika-chhoa/smart-nest-server.git
 
 ---
 
@@ -138,25 +138,25 @@ npm install
 Frontend
 
 ```env
-NEXT_PUBLIC_API_URL=
+NEXT_PUBLIC_API_URL
 
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ```
 
 Backend
 
 ```env
-PORT=
+PORT
 
-MONGODB_URI=
+MONGODB_URI
 
-JWT_SECRET=
+JWT_SECRET
 
-BETTER_AUTH_SECRET=
+BETTER_AUTH_SECRET
 
-BETTER_AUTH_URL=
+BETTER_AUTH_URL
 
-STRIPE_SECRET_KEY=
+STRIPE_SECRET_KEY
 ```
 
 ### Run the project

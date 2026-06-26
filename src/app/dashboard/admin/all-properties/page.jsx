@@ -1,13 +1,12 @@
 import { getAllProperties } from "@/lib/api/properties";
 import AllPropertiesTableClient from "./AllPropertiesTableClient";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+
 
 export const metadata = {
   title: "Admin Panel | Manage Master Architecture Listings",
 };
 
-// Next.js 15 configuration: searchParams is a Promise that must be awaited
+
 export default async function AllPropertiesPage(props) {
   
   const searchParams = await props.searchParams;
